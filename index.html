@@ -1,86 +1,744 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Verses for Cave Men</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#2e231b">
+<meta name="description" content="A timer and card deck for playing Poetry for Neanderthals. One-syllable words only, or get bonked.">
+<title>Verses for Cave Men</title>
+<link rel="icon" href="favicon.ico" sizes="48x48">
+<link rel="icon" href="img/favicon.png" type="image/png" sizes="64x64">
+<link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+<!-- the font is vendored in fonts/ (SIL OFL, see fonts/OFL.txt) rather than
+     pulled off Google Fonts, so the front page makes no third-party requests -->
+<link rel="preload" href="fonts/titan-one-latin.woff2" as="font" type="font/woff2" crossorigin>
+
+<style>
+  @font-face {
+    font-family: "Titan One";
+    src: url("fonts/titan-one-latin.woff2") format("woff2");
+    font-display: swap;
+  }
+
+  :root {
+    --cave-deep:  #17110d;
+    --cave:       #2e231b;
+    --cave-hi:    #4a3526;
+    --hide:       rgba(255, 236, 214, .06);   /* translucent panels on the cave wall */
+    --hide-line:  rgba(255, 220, 180, .14);
+    --bone:       #f3e9d6;
+    --bone-dim:   #c9b89d;
+    --ink:        #2a211b;
+    --ochre:      #d9822f;   /* cave-painting orange, the one loud colour */
+    --ochre-hi:   #f0a14f;
+    --ochre-edge: #93531a;
+    --stone-hi:   #cfccc6;
+    --stone:      #a9a6a0;
+    --stone-lo:   #7c7974;
+    --bonk:       #c9503f;
+    --bonk-edge:  #8a3024;
+    --one:        #e2ad38;
+    --one-edge:   #9c7016;
+    --three:      #6f9d45;
+    --three-edge: #45692a;
+    --display: "Titan One", "Arial Black", Impact, system-ui, sans-serif;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --hewn: 26px 34px 28px 38px / 34px 26px 38px 28px;   /* lumpy corners, like a chipped slab */
+    --spring: cubic-bezier(.2, .9, .3, 1.25);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { -webkit-text-size-adjust: 100%; }
+
+  body {
+    min-height: 100vh;
+    min-height: 100dvh;   /* dvh so mobile browser chrome doesn't push the buttons off-screen */
+    font-family: var(--sans);
+    color: var(--bone);
+    background:
+      radial-gradient(ellipse 90% 60% at 50% -10%, var(--cave-hi) 0%, transparent 70%),
+      linear-gradient(180deg, var(--cave) 0%, var(--cave-deep) 100%);
+    background-color: var(--cave-deep);
+    background-attachment: fixed;
+    overflow-x: hidden;
+  }
+
+  fieldset { border: 0; }
+
+  button {
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+    border: none;
+    background: none;
+    touch-action: manipulation;          /* no double-tap zoom when mashing +1 */
+    -webkit-tap-highlight-color: transparent;
+  }
+  button:focus-visible, input:focus-visible, .pack:focus-within {
+    outline: 3px solid var(--ochre-hi);
+    outline-offset: 2px;
+  }
+
+  /* ---- torchlight ---------------------------------------------------------- */
+  /* a warm glow that never quite holds still, sitting over the whole page */
+  .torchlight {
+    position: fixed; inset: 0;
+    pointer-events: none;
+    background: radial-gradient(55% 40% at 50% 12%, rgba(255, 150, 60, .22), transparent 72%);
+    animation: flicker 5s infinite steps(1, end);
+    z-index: 0;
+  }
+  @keyframes flicker {
+    0%   { opacity: .85; }  9%  { opacity: 1; }    17% { opacity: .8; }
+    26%  { opacity: .95; }  38% { opacity: .78; }  51% { opacity: 1; }
+    63%  { opacity: .88; }  74% { opacity: .96; }  88% { opacity: .82; }
+  }
+
+  /* ---- screens ------------------------------------------------------------- */
+  /* both screens share one grid cell so they can crossfade instead of the
+     menu blinking out and the game blinking in */
+  #app {
+    --pad-t: max(16px, env(safe-area-inset-top));
+    --pad-r: max(16px, env(safe-area-inset-right));
+    --pad-b: max(16px, env(safe-area-inset-bottom));
+    --pad-l: max(16px, env(safe-area-inset-left));
+    position: relative; z-index: 1;
+    display: grid;
+    min-height: 100vh;
+    min-height: 100dvh;
+    max-width: 30rem;
+    margin: 0 auto;
+    padding: var(--pad-t) var(--pad-r) var(--pad-b) var(--pad-l);
+  }
+  .screen {
+    grid-area: 1 / 1;
+    display: flex; flex-direction: column;
+    min-height: 0;
+    opacity: 0; visibility: hidden;
+    transform: translateY(18px) scale(.97);
+    transition: opacity .3s ease, transform .3s ease, visibility 0s linear .3s;
+  }
+  /* an inactive screen drops out of the flow. otherwise the shared cell is as
+     tall as the menu, the game screen stretches to match, and on a short phone
+     the scoring buttons end up below the fold mid-round */
+  .screen:not(.is-active) {
+    position: absolute;
+    top: var(--pad-t); left: var(--pad-l); right: var(--pad-r);
+  }
+  .screen.is-active {
+    opacity: 1; visibility: visible;
+    transform: none;
+    transition: opacity .35s ease, transform .45s var(--spring), visibility 0s;
+  }
+
+  /* ---- menu screen --------------------------------------------------------- */
+  #menuScreen { gap: 18px; }
+
+  /* auto margins centre the menu when there's room, and let it scroll from
+     the top when there isn't. justify-content: center would shove the title
+     up past the top edge on a short phone, where you can't scroll to it */
+  .masthead { text-align: center; padding-top: 8px; margin-top: auto; }
+  .rock-logo {
+    display: inline-block;
+    width: 84px; height: 44px;          /* 4x the 21x11 source, whole pixels only */
+    image-rendering: pixelated;
+    animation: rock-bob 3.2s ease-in-out infinite;
+    cursor: pointer;
+    filter: drop-shadow(0 6px 4px rgba(0, 0, 0, .45));
+  }
+  .rock-logo.is-tumbling { animation: rock-tumble .7s var(--spring); }
+  @keyframes rock-bob {
+    0%, 100% { transform: translateY(0) rotate(-3deg); }
+    50%      { transform: translateY(-7px) rotate(3deg); }
+  }
+  @keyframes rock-tumble {
+    0%   { transform: translateY(0) rotate(0); }
+    40%  { transform: translateY(-28px) rotate(200deg); }
+    100% { transform: translateY(0) rotate(360deg); }
+  }
+  h1 {
+    font-family: var(--display);
+    font-weight: 400;
+    font-size: clamp(2.1rem, 11vw, 3rem);
+    line-height: 1;
+    letter-spacing: .01em;
+    color: var(--bone);
+    text-shadow: 0 3px 0 var(--ochre), 0 8px 18px rgba(0, 0, 0, .5);
+    margin-top: 10px;
+  }
+  .tagline { margin-top: 10px; color: var(--bone-dim); font-size: 1.02rem; }
+  .tagline b { color: var(--ochre-hi); }
+
+  .panel {
+    background: var(--hide);
+    border: 1px solid var(--hide-line);
+    border-radius: 20px;
+    padding: 18px;
+    display: grid; gap: 18px;
+    backdrop-filter: blur(6px);
+  }
+  .field-label {
+    display: block;
+    font-family: var(--display);
+    font-weight: 400;
+    font-size: 1.05rem;
+    letter-spacing: .02em;
+    margin-bottom: 8px;
+  }
+
+  .stepper { display: flex; align-items: stretch; gap: 8px; }
+  .stepper button {
+    width: 52px; border-radius: 14px;
+    font-family: var(--display); font-size: 1.5rem;
+    background: rgba(255, 236, 214, .1);
+    transition: background .15s, transform .12s;
+  }
+  .stepper button:active { transform: scale(.92); background: rgba(255, 236, 214, .2); }
+  .stepper input {
+    flex: 1; min-width: 0;
+    text-align: center;
+    font: 1.6rem var(--display);
+    color: var(--bone);
+    background: rgba(0, 0, 0, .25);
+    border: 2px solid var(--hide-line);
+    border-radius: 14px;
+    padding: 10px 6px;
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
+  .stepper input::-webkit-inner-spin-button,
+  .stepper input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+  .stepper-unit { align-self: center; color: var(--bone-dim); font-size: .9rem; }
+
+  /* card packs are real checkboxes, dressed up as chunky toggle chips */
+  .packs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .pack { position: relative; display: block; cursor: pointer; border-radius: 14px; }
+  .pack input { position: absolute; opacity: 0; pointer-events: none; }
+  .pack-face {
+    display: flex; flex-direction: column; gap: 2px;
+    height: 100%;
+    padding: 11px 12px;
+    border-radius: 14px;
+    border: 2px solid var(--hide-line);
+    background: rgba(0, 0, 0, .18);
+    font-size: .9rem; line-height: 1.25;
+    color: var(--bone-dim);
+    transition: background .2s, border-color .2s, color .2s, transform .25s var(--spring);
+  }
+  .pack-face small { font-size: .78rem; opacity: .8; }
+  .pack:active .pack-face { transform: scale(.96); }
+  .pack input:checked + .pack-face {
+    color: var(--ink);
+    background: var(--ochre-hi);
+    border-color: var(--ochre);
+    transform: rotate(-1deg);
+  }
+  .pack:nth-child(even) input:checked + .pack-face { transform: rotate(1deg); }
+
+  /* ---- stone buttons ------------------------------------------------------- */
+  /* the thick bottom edge is a box-shadow, so pressing one sinks it into
+     that edge rather than scaling the whole thing */
+  .slab-btn {
+    --face: var(--ochre);
+    --edge: var(--ochre-edge);
+    position: relative;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    font-family: var(--display);
+    color: var(--ink);
+    background: var(--face);
+    border-radius: 18px 22px 18px 24px / 22px 18px 24px 18px;
+    box-shadow: 0 6px 0 var(--edge), 0 10px 18px rgba(0, 0, 0, .35);
+    transition: transform .08s ease, box-shadow .08s ease, filter .15s;
+  }
+  .slab-btn:hover { filter: brightness(1.06); }
+  .slab-btn:active, .slab-btn.is-pressed {
+    transform: translateY(6px);
+    box-shadow: 0 0 0 var(--edge), 0 3px 8px rgba(0, 0, 0, .35);
+  }
+  .slab-btn:disabled { filter: saturate(.3) brightness(.8); cursor: default; }
+
+  .menu-actions { display: grid; grid-template-columns: 1fr auto; gap: 12px; margin-top: 4px; }
+  #startBtn { font-size: 1.6rem; padding: 16px; }
+  .ghost-btn {
+    font-family: var(--display);
+    font-size: 1rem;
+    padding: 0 18px;
+    border-radius: 18px;
+    border: 2px solid var(--hide-line);
+    color: var(--bone);
+    background: rgba(255, 236, 214, .06);
+    transition: background .15s, transform .12s;
+  }
+  .ghost-btn:hover { background: rgba(255, 236, 214, .12); }
+  .ghost-btn:active { transform: scale(.95); }
+
+  .credits {
+    margin-bottom: auto;
+    text-align: center;
+    font-size: .78rem; line-height: 1.6;
+    color: var(--bone-dim);
+    opacity: .75;
+  }
+  .credits a { color: inherit; }
+
+  /* ---- game screen --------------------------------------------------------- */
+  #gameScreen { gap: 14px; user-select: none; -webkit-user-select: none; }
+
+  .hud { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px; }
+  .hud-btn {
+    font-family: var(--display);
+    font-size: .95rem;
+    padding: 10px 14px;
+    border-radius: 14px;
+    background: rgba(255, 236, 214, .08);
+    border: 1px solid var(--hide-line);
+    transition: background .15s, transform .12s;
+  }
+  .hud-btn:active { transform: scale(.93); }
+  .hud-stats { display: flex; justify-content: center; gap: 22px; }
+  .stat { text-align: center; line-height: 1; }
+  .stat-value {
+    display: block;
+    font-family: var(--display);
+    font-size: 2.1rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .stat-label {
+    display: block; margin-top: 4px;
+    font-size: .72rem; letter-spacing: .12em; text-transform: uppercase;
+    color: var(--bone-dim);
+  }
+  #timeValue.is-urgent { color: var(--bonk); animation: urgent-pulse 1s ease-in-out infinite; }
+  @keyframes urgent-pulse {
+    0%, 100% { transform: scale(1); }
+    50%      { transform: scale(1.18); }
+  }
+
+  /* the torch, burning down left to right over the round */
+  .fuse { height: 10px; border-radius: 99px; background: rgba(0, 0, 0, .35); overflow: hidden; }
+  .fuse-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--ochre), var(--ochre-hi) 70%, #ffe2a8);
+    transform-origin: left center;
+    box-shadow: 0 0 12px rgba(255, 170, 80, .7);
+  }
+  .fuse.is-urgent .fuse-fill { background: linear-gradient(90deg, var(--bonk-edge), var(--bonk) 70%, #ffb3a0); }
+
+  /* ---- the card ------------------------------------------------------------ */
+  .card-slot {
+    position: relative;
+    flex: 1;
+    min-height: 220px;
+    display: grid;
+  }
+  .card {
+    position: relative;
+    grid-area: 1 / 1;
+    container-type: inline-size;
+    display: flex; flex-direction: column; justify-content: center;
+    padding: 22px 20px;
+    color: var(--ink);
+    border-radius: var(--hewn);
+    background:
+      radial-gradient(120% 80% at 25% 15%, var(--stone-hi), transparent 60%),
+      linear-gradient(160deg, var(--stone) 0%, var(--stone-lo) 100%);
+    box-shadow:
+      inset 0 3px 0 rgba(255, 255, 255, .35),
+      inset 0 -8px 0 rgba(0, 0, 0, .18),
+      0 16px 34px rgba(0, 0, 0, .5);
+    overflow: hidden;
+  }
+  /* speckle, so it reads as rock rather than a grey rectangle */
+  .card::before {
+    content: "";
+    position: absolute; inset: 0;
+    pointer-events: none;
+    background-image:
+      radial-gradient(circle at 20% 30%, rgba(0, 0, 0, .14) 0 1.5px, transparent 2px),
+      radial-gradient(circle at 70% 60%, rgba(255, 255, 255, .18) 0 1px, transparent 1.5px),
+      radial-gradient(circle at 45% 80%, rgba(0, 0, 0, .1) 0 2px, transparent 2.5px);
+    background-size: 23px 19px, 17px 21px, 31px 27px;
+  }
+  .card-ghost { pointer-events: none; z-index: 2; }
+
+  .word-row { position: relative; display: flex; align-items: center; gap: 14px; }
+  .badge {
+    flex: none;
+    display: grid; place-items: center;
+    width: 44px; height: 44px;
+    border-radius: 50% 46% 52% 48%;
+    font-family: var(--display); font-size: 1.35rem;
+    box-shadow: 0 3px 0 rgba(0, 0, 0, .25);
+  }
+  .badge-one   { background: var(--one); color: var(--ink); }
+  .badge-three { background: var(--three); color: var(--bone); }
+  .word {
+    font-family: var(--display);
+    font-weight: 400;
+    font-size: clamp(1.4rem, 10cqi, 2.5rem);
+    line-height: 1.08;
+    overflow-wrap: anywhere;
+  }
+  .word-three { font-size: clamp(1.25rem, 8.5cqi, 2.1rem); }
+  .chisel {
+    position: relative;
+    height: 3px; margin: 18px 4px;
+    border-radius: 3px;
+    background: linear-gradient(90deg, transparent, rgba(0, 0, 0, .22) 12%, rgba(0, 0, 0, .22) 88%, transparent);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, .35);
+  }
+
+  /* BONK! pops over the card when the poet slips up */
+  .bonk-pop {
+    position: absolute; top: 42%; left: 50%;
+    z-index: 3;
+    font-family: var(--display);
+    font-size: clamp(3rem, 18vw, 5rem);
+    color: var(--bonk);
+    -webkit-text-stroke: 3px var(--bone);
+    paint-order: stroke fill;
+    text-shadow: 0 6px 0 var(--bonk-edge);
+    pointer-events: none;
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(.3) rotate(-12deg);
+  }
+  .bonk-pop.is-showing { animation: bonk-pop .75s var(--spring) forwards; }
+  @keyframes bonk-pop {
+    0%   { opacity: 0; transform: translate(-50%, -50%) scale(.3) rotate(-12deg); }
+    25%  { opacity: 1; transform: translate(-50%, -50%) scale(1.15) rotate(-8deg); }
+    70%  { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(-8deg); }
+    100% { opacity: 0; transform: translate(-50%, -80%) scale(.95) rotate(-8deg); }
+  }
+  #gameScreen.is-bonked .card-slot { animation: bonk-shake .4s ease; }
+  @keyframes bonk-shake {
+    0%, 100% { transform: none; }
+    15% { transform: translate(-10px, 3px) rotate(-2deg); }
+    30% { transform: translate(9px, -2px) rotate(1.5deg); }
+    45% { transform: translate(-6px, 2px) rotate(-1deg); }
+    60% { transform: translate(4px, 0) rotate(.5deg); }
+    80% { transform: translate(-2px, 0); }
+  }
+
+  /* ---- scoring buttons ----------------------------------------------------- */
+  .score-btns { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding-bottom: 6px; }
+  .score-btn { min-height: 92px; padding: 10px 4px 12px; }
+  .score-btn .pts { font-size: 2.3rem; line-height: 1; }
+  .score-btn .what { font-family: var(--sans); font-weight: 700; font-size: .78rem; margin-top: 6px; opacity: .85; }
+  .score-btn.minus { --face: var(--bonk);  --edge: var(--bonk-edge);  color: var(--bone); }
+  .score-btn.one   { --face: var(--one);   --edge: var(--one-edge); }
+  .score-btn.three { --face: var(--three); --edge: var(--three-edge); color: var(--bone); }
+
+  /* the "+3" that floats up off a button when it's tapped */
+  .float-pts {
+    position: absolute; left: 50%; top: 0;
+    font-family: var(--display); font-size: 1.8rem;
+    color: var(--bone);
+    text-shadow: 0 3px 0 rgba(0, 0, 0, .35);
+    pointer-events: none;
+    white-space: nowrap;
+  }
+
+  /* ---- overlays: countdown, round over, rules ------------------------------ */
+  .overlay {
+    position: fixed; inset: 0; z-index: 10;
+    display: grid; place-items: center;
+    padding: 20px;
+    background: rgba(15, 10, 7, .72);
+    backdrop-filter: blur(4px);
+    opacity: 0; visibility: hidden;
+    transition: opacity .25s ease, visibility 0s linear .25s;
+  }
+  .overlay.is-open { opacity: 1; visibility: visible; transition: opacity .25s ease, visibility 0s; }
+
+  #countdown { cursor: pointer; }
+  .countdown-num {
+    font-family: var(--display);
+    font-size: clamp(6rem, 40vw, 11rem);
+    color: var(--bone);
+    text-shadow: 0 8px 0 var(--ochre), 0 20px 40px rgba(0, 0, 0, .6);
+  }
+  .countdown-num.is-popping { animation: count-pop .6s var(--spring); }
+  @keyframes count-pop {
+    0%   { transform: scale(2.2); opacity: 0; }
+    60%  { transform: scale(.95); opacity: 1; }
+    100% { transform: scale(1); }
+  }
+  .countdown-hint {
+    position: fixed; left: 0; right: 0;
+    bottom: max(24px, env(safe-area-inset-bottom));
+    text-align: center; color: var(--bone-dim); font-size: .85rem;
+  }
+
+  .sheet {
+    width: min(100%, 28rem);
+    max-height: 100%;
+    overflow-y: auto;
+    padding: 24px 22px;
+    border-radius: 24px;
+    background: linear-gradient(180deg, #3b2d22, #2a2019);
+    border: 1px solid var(--hide-line);
+    box-shadow: 0 24px 60px rgba(0, 0, 0, .6);
+    transform: translateY(30px) scale(.96);
+    transition: transform .4s var(--spring);
+  }
+  .overlay.is-open .sheet { transform: none; }
+
+  #roundOver .sheet { text-align: center; display: grid; gap: 14px; }
+  .times-up {
+    font-family: var(--display);
+    font-size: clamp(3rem, 16vw, 4.4rem);
+    line-height: 1;
+    color: var(--ochre-hi);
+    text-shadow: 0 5px 0 #7a4212;
+    transform: rotate(-3deg);
+  }
+  #roundOver.is-open .times-up { animation: slam .55s var(--spring); }
+  @keyframes slam {
+    0%   { transform: scale(2.6) rotate(-10deg); opacity: 0; }
+    60%  { transform: scale(.94) rotate(-3deg); opacity: 1; }
+    100% { transform: scale(1) rotate(-3deg); }
+  }
+  .final-score { font-family: var(--display); font-size: 4.2rem; line-height: 1; font-variant-numeric: tabular-nums; }
+  .final-label { color: var(--bone-dim); font-size: .85rem; letter-spacing: .12em; text-transform: uppercase; }
+  .round-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 6px; }
+  .round-actions .slab-btn { font-size: 1.2rem; padding: 14px 8px; }
+  .round-actions .slab-btn.secondary { --face: var(--stone); --edge: var(--stone-lo); }
+  .pass-hint { color: var(--bone-dim); font-size: .88rem; }
+  #roundRulesBtn { padding: 10px; }
+
+  .rules h2 {
+    font-family: var(--display); font-weight: 400;
+    font-size: 1.7rem;
+    color: var(--ochre-hi);
+    margin-bottom: 12px;
+  }
+  .rules h3 { font-family: var(--display); font-weight: 400; font-size: 1.15rem; margin: 20px 0 8px; }
+  .rules li { color: var(--bone); line-height: 1.5; font-size: .95rem; }
+  .rules ul { padding-left: 1.2em; display: grid; gap: 6px; }
+  .rules .example { color: var(--bone-dim); font-size: .88rem; margin-top: 2px; }
+  .rules .example b { color: var(--three); }
+  .rules .example s { color: var(--bonk); }
+  .pill {
+    display: inline-block; min-width: 2.2em;
+    padding: 0 6px; border-radius: 8px;
+    font-family: var(--display); text-align: center;
+  }
+  .pill.minus { background: var(--bonk); color: var(--bone); }
+  .pill.one   { background: var(--one); color: var(--ink); }
+  .pill.three { background: var(--three); color: var(--bone); }
+  .rules-close { width: 100%; margin-top: 22px; padding: 14px; font-size: 1.2rem; }
+
+  /* ---- toast --------------------------------------------------------------- */
+  #toast {
+    position: fixed; left: 50%; bottom: max(20px, env(safe-area-inset-bottom));
+    z-index: 20;
+    max-width: calc(100vw - 32px);
+    padding: 12px 18px;
+    border-radius: 14px;
+    background: var(--bonk);
+    color: var(--bone);
+    font-weight: 600;
+    box-shadow: 0 10px 24px rgba(0, 0, 0, .45);
+    visibility: hidden;
+    transform: translate(-50%, calc(100% + 40px));
+    transition: transform .35s var(--spring), visibility 0s linear .35s;
+  }
+  #toast.is-showing {
+    visibility: visible;
+    transform: translate(-50%, 0);
+    transition: transform .35s var(--spring), visibility 0s;
+  }
+
+  .is-invalid { animation: nope .4s ease; border-radius: 14px; box-shadow: 0 0 0 3px var(--bonk); }
+  @keyframes nope {
+    0%, 100% { transform: none; }
+    25% { transform: translateX(-8px); }
+    50% { transform: translateX(7px); }
+    75% { transform: translateX(-4px); }
+  }
+
+  /* ---- small screens and reduced motion ------------------------------------ */
+  @media (max-width: 380px) {
+    .score-btns { gap: 8px; }
+    .score-btn { min-height: 84px; }
+    .score-btn .what { font-size: .7rem; }
+    .hud-stats { gap: 14px; }
+  }
+  @media (min-height: 760px) {
+    .card-slot { max-height: 420px; }
+  }
+  /* the torch, the bob and the flinging are all decoration. with reduced
+     motion on, everything still changes state, it doesn't fly around */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: .01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: .01ms !important;
+    }
+    .torchlight, .rock-logo { animation: none; }
+  }
+</style>
 </head>
-<body class="flex flex-col items-center justify-center h-screen bg-gray-50">
+<body>
+<div class="torchlight" aria-hidden="true"></div>
 
-    <!-- Options Menu -->
-    <div id="options-menu" class="border border-gray-200 rounded-lg shadow-lg w-96 bg-white">
-        <div class="p-4">
-            <h1 class="text-center text-xl font-bold mb-4">Options</h1>
-            <div class="grid grid-cols-1 gap-2">
-                <div id="time-input-container" class="grid grid-cols gap-1">
-                    <label for="time-input" class="font-bold">Timer length in seconds</label>
-                    <input type="number" id="time-input" class="border p-2 w-full focus:outline-none" value="60">
-                </div>
+<main id="app">
 
-                <div id="card-packs-container" class="grid grid-cols gap-1">
-                    <label class="font-bold">Card Packs</label>
-                    <div class="flex">
-                        <input id="base-game-gray-checkbox" type="checkbox" class="mr-2" value="data/base_game_gray.json" checked>
-                        <label for="base-game-gray-checkbox">Base game (gray side)</label>
-                    </div>
-                    <div class="flex">
-                        <input id="base-game-red-checkbox" type="checkbox" class="mr-2" value="data/base_game_red.json">
-                        <label for="base-game-red-checkbox">Base game (red side)</label>
-                    </div>
-                    <div class="flex">
-                        <input id="more-cards-box-1-expansion-gray-checkbox" type="checkbox" class="mr-2" value="data/more_cards_box_1_expansion_pack_gray.json">
-                        <label for="more-cards-box-1-expansion-gray-checkbox">More cards box 1 expansion (gray side)</label>
-                    </div>
-                    <div class="flex">
-                        <input id="more-cards-box-1-expansion-red-checkbox" type="checkbox" class="mr-2" value="data/more_cards_box_1_expansion_pack_red.json">
-                        <label for="more-cards-box-1-expansion-red-checkbox">More cards box 1 expansion (red side)</label>
-                    </div>
-                </div>
+  <!-- menu -->
+  <section id="menuScreen" class="screen is-active" aria-labelledby="title">
+    <header class="masthead">
+      <img id="rockLogo" class="rock-logo" src="img/rock.png" alt="" width="84" height="44">
+      <h1 id="title">Verses for Cave Men</h1>
+      <p class="tagline">Words with <b>one sound</b> each. Or get bonked.</p>
+    </header>
 
-                <button id="start-game" class="bg-blue-100 text-blue-600 font-semibold hover:bg-blue-200 transition duration-300 p-2 focus:outline-none">Start</button>
-            </div>
+    <div class="panel">
+      <div id="timeField">
+        <label class="field-label" for="timeInput">Round length</label>
+        <div class="stepper">
+          <button type="button" id="timeDown" aria-label="Shorter round">&minus;</button>
+          <input type="number" id="timeInput" inputmode="numeric" min="5" max="600" step="5" value="60">
+          <span class="stepper-unit">sec</span>
+          <button type="button" id="timeUp" aria-label="Longer round">+</button>
         </div>
+      </div>
+
+      <fieldset id="packsField">
+        <legend class="field-label">Card packs</legend>
+        <div class="packs">
+          <label class="pack">
+            <input type="checkbox" value="data/base_game_gray.json" checked>
+            <span class="pack-face">Base game<small>gray side</small></span>
+          </label>
+          <label class="pack">
+            <input type="checkbox" value="data/base_game_red.json">
+            <span class="pack-face">Base game<small>red side</small></span>
+          </label>
+          <label class="pack">
+            <input type="checkbox" value="data/more_cards_box_1_expansion_pack_gray.json">
+            <span class="pack-face">More Cards box 1<small>gray side</small></span>
+          </label>
+          <label class="pack">
+            <input type="checkbox" value="data/more_cards_box_1_expansion_pack_red.json">
+            <span class="pack-face">More Cards box 1<small>red side</small></span>
+          </label>
+        </div>
+      </fieldset>
+
+      <div class="menu-actions">
+        <button type="button" id="startBtn" class="slab-btn">Start</button>
+        <button type="button" id="rulesBtn" class="ghost-btn">How to play</button>
+      </div>
     </div>
 
-    <!-- Main Game Screen (hidden initially) -->
-    <div id="game-screen" class="border border-gray-200 rounded-lg shadow-lg w-96 bg-white hidden">
-        <!-- Top section -->
-        <div class="grid grid-cols-3 border-b border-gray-200 p-4">
-            <div class="flex flex-col justify-between">
-                <span id="reset-score" class="text-gray-500 font-semibold hover:text-black transition duration-300 cursor-pointer">Reset Score</span>
-                <span id="score" class="self-start text-lg font-bold text-gray-800">Score: 0</span>
-            </div>
-            <div class="flex flex-col h-20 items-center justify-between">
-                <span id="word1" class="text-lg font-bold text-yellow-500 text-center break-words">Word1</span>
-                <span id="word3" class="text-lg font-bold text-green-500 text-center break-words">Word2</span>
-            </div>
-            <div class="flex justify-end">
-                <span id="timer-display" class="text-lg font-bold text-gray-800">Timer: 0</span>
-            </div>
-        </div>
+    <p class="credits">
+      Unofficial fan-made companion for
+      <a href="https://www.explodingkittens.com/products/poetry-for-neanderthals" rel="noopener">Poetry for Neanderthals</a>.
+      Go buy the real game.<br>
+      Built on <a href="https://github.com/klrmngr/poetry-for-neanderthals" rel="noopener">Verses for Cave Men</a> by its original contributors.
+    </p>
+  </section>
 
-        <!-- Buttons -->
-        <div class="grid grid-cols-3 divide-x divide-gray-200">
-            <!-- -1 -->
-            <button id="score-1" class="bg-red-100 text-red-600 font-semibold hover:bg-red-200 transition duration-300 flex items-center justify-center p-4 focus:outline-none">
-                <span class="text-2xl">-1</span>
-            </button>
-            <!-- +1 -->
-            <button id="score+1" class="bg-yellow-100 text-yellow-600 font-semibold hover:bg-yellow-200 transition duration-300 flex items-center justify-center p-4 focus:outline-none">
-                <span class="text-2xl">+1</span>
-            </button>
-            <!-- +3 -->
-            <button id="score+3" class="bg-green-100 text-green-600 font-semibold hover:bg-green-200 transition duration-300 flex items-center justify-center p-4 focus:outline-none">
-                <span class="text-2xl">+3</span>
-            </button>
-        </div>
+  <!-- game -->
+  <section id="gameScreen" class="screen" aria-label="Game">
+    <div class="hud">
+      <button type="button" id="menuBtn" class="hud-btn">&lsaquo; Menu</button>
+      <div class="hud-stats">
+        <div class="stat"><span id="scoreValue" class="stat-value">0</span><span class="stat-label">Score</span></div>
+        <div class="stat"><span id="timeValue" class="stat-value">60</span><span class="stat-label">Sec</span></div>
+      </div>
+      <button type="button" id="restartBtn" class="hud-btn">Restart</button>
     </div>
 
-    <!-- Error Message (hidden initially) -->
-    <div id="error-message" class="border border-red-200 rounded-lg shadow-lg bg-red-200 w-96 mt-4 p-4 hidden"></div>
+    <div id="fuse" class="fuse" aria-hidden="true"><div id="fuseFill" class="fuse-fill"></div></div>
 
-    <!-- JavaScript Logic -->
-    <script src="js/script.js"></script>
+    <div id="cardSlot" class="card-slot">
+      <div id="card" class="card" aria-live="polite">
+        <div class="word-row">
+          <span class="badge badge-one" aria-label="1 point">1</span>
+          <span id="wordOne" class="word">Rock</span>
+        </div>
+        <div class="chisel" aria-hidden="true"></div>
+        <div class="word-row">
+          <span class="badge badge-three" aria-label="3 points">3</span>
+          <span id="wordThree" class="word word-three">Rock and roll</span>
+        </div>
+      </div>
+      <div id="bonkPop" class="bonk-pop" aria-hidden="true">BONK!</div>
+    </div>
+
+    <div class="score-btns">
+      <button type="button" class="slab-btn score-btn minus" data-points="-1">
+        <span class="pts">&minus;1</span><span class="what">Bonk / skip</span>
+      </button>
+      <button type="button" class="slab-btn score-btn one" data-points="1">
+        <span class="pts">+1</span><span class="what">Got the 1</span>
+      </button>
+      <button type="button" class="slab-btn score-btn three" data-points="3">
+        <span class="pts">+3</span><span class="what">Got the 3</span>
+      </button>
+    </div>
+  </section>
+</main>
+
+<!-- 3, 2, 1 before a round, so the poet has the phone in hand before the clock runs -->
+<div id="countdown" class="overlay" aria-live="assertive">
+  <span id="countdownNum" class="countdown-num">3</span>
+  <p class="countdown-hint">Tap to skip</p>
+</div>
+
+<div id="roundOver" class="overlay" role="dialog" aria-modal="true" aria-labelledby="timesUpTitle">
+  <div class="sheet">
+    <div id="timesUpTitle" class="times-up">Time!</div>
+    <div>
+      <div id="finalScore" class="final-score">0</div>
+      <div class="final-label">Round score</div>
+    </div>
+    <p class="pass-hint">Pass it to the next team's Poet.</p>
+    <div class="round-actions">
+      <button type="button" id="nextTeamBtn" class="slab-btn">Next team</button>
+      <button type="button" id="optionsBtn" class="slab-btn secondary">Options</button>
+    </div>
+    <button type="button" id="roundRulesBtn" class="ghost-btn">How to play</button>
+  </div>
+</div>
+
+<div id="rules" class="overlay" role="dialog" aria-modal="true" aria-labelledby="rulesTitle">
+  <div class="sheet rules">
+    <h2 id="rulesTitle">How to play</h2>
+
+    <h3>The game</h3>
+    <ul>
+      <li>Split into two teams and take turns. Each turn, one player is the <b>Poet</b>.</li>
+      <li>Each card has a <span class="pill one">1</span> word and a harder
+        <span class="pill three">3</span> word or phrase. The Poet gets their team to guess it.</li>
+      <li>The catch: the Poet may only say words with <b>one syllable</b>.
+        <p class="example">"Big cat. Has mane. Goes <b>roar</b>." works. <s>"Enormous feline"</s> does not.</p></li>
+      <li>Slip up with a longer word and the other team gets to bonk you with the
+        No! Stick, and the card costs your team <span class="pill minus">&minus;1</span>.</li>
+      <li>Most points after an agreed number of rounds wins.</li>
+    </ul>
+
+    <h3>Using this page</h3>
+    <ul>
+      <li>Pick a round length and the card packs you own, then hit <b>Start</b>.</li>
+      <li>The Poet holds the screen. The other team watches over their shoulder so they
+        know the words and can catch slips.</li>
+      <li>After each card, tap <span class="pill one">+1</span> or
+        <span class="pill three">+3</span> for what the team guessed, or
+        <span class="pill minus">&minus;1</span> for a bonk or a skip. The next card shows up on its own.</li>
+      <li>When the torch burns out, hand it to the next team and tap <b>Next team</b>.
+        The deck carries on, so nobody sees a repeat until every card's been used.</li>
+      <li>On a phone, the screen stays awake during a round.</li>
+    </ul>
+
+    <button type="button" id="rulesCloseBtn" class="slab-btn rules-close">Got it</button>
+  </div>
+</div>
+
+<div id="toast" role="alert"></div>
+
+<script type="module" src="js/script.js"></script>
 </body>
 </html>
