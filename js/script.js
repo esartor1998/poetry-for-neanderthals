@@ -13,6 +13,14 @@ const BONK_VIBRATE_MS = 90;       // android only, iOS ignores navigator.vibrate
 const TIME_UP_VIBRATE = [70, 50, 70, 50, 160];
 const TOAST_MS = 4500;
 const OPTIONS_KEY = 'vfcm.options';
+const LIGHT_EASE = 0.16;          // share of the gap to the cursor the glow closes per 60 Hz frame
+const LIGHT_OFFSET_X = 3;         // px from the torch cursor's hotspot to the middle of its flame
+const LIGHT_OFFSET_Y = 7;
+const KEY_PRESS_MS = 120;         // how long a keyboard shortcut holds its button down, so you see it land
+
+// keys that score during a round. '-' covers both the main row and the
+// numpad, since both report key '-'
+const SCORE_KEYS = { '1': '.score-btn.one', '3': '.score-btn.three', '-': '.score-btn.minus', 'b': '.score-btn.minus' };
 
 const state = {
   deck: [],           // shuffled cards across every selected pack
@@ -29,7 +37,6 @@ let _lastTapAt = 0;
 let _countdownToken = 0;    // bumped to cancel a countdown that's still ticking
 let _wakeLock = null;
 let _toastTimer = 0;
-let _focusBeforeOverlay = null;
 const _packCache = new Map();
 
 const reducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -146,25 +153,29 @@ async function startGame() {
 // ---------------------------------------------------------------------------
 // screens and overlays
 // ---------------------------------------------------------------------------
+// the button that was clicked to get here has just gone invisible, and focus
+// on a hidden element drops a keyboard or screen reader user back at the top
+// of the document. so we hand it to the new screen's heading instead
 function showScreen(id) {
   for (const screen of document.querySelectorAll('.screen')) {
     screen.classList.toggle('is-active', screen.id === id);
   }
   window.scrollTo(0, 0); // Start sits at the bottom of a scrolled menu on small phones
+  el(id).querySelector('[tabindex="-1"]')?.focus({ preventScroll: true });
 }
 
+// these are native <dialog>s, so showModal() traps focus, makes the page
+// behind inert and puts focus back where it was on close. we only pick which
+// button gets focus first
 function openOverlay(id, focusId) {
-  _focusBeforeOverlay = document.activeElement;
-  el(id).classList.add('is-open');
+  const dialog = el(id);
+  if (!dialog.open) dialog.showModal();
   if (focusId) el(focusId).focus({ preventScroll: true });
 }
 
 function closeOverlay(id) {
-  el(id).classList.remove('is-open');
-  if (_focusBeforeOverlay && document.contains(_focusBeforeOverlay)) {
-    _focusBeforeOverlay.focus({ preventScroll: true });
-  }
-  _focusBeforeOverlay = null;
+  const dialog = el(id);
+  if (dialog.open) dialog.close();
 }
 
 function toast(message) {
@@ -173,6 +184,15 @@ function toast(message) {
   t.classList.add('is-showing');
   clearTimeout(_toastTimer);
   _toastTimer = setTimeout(() => t.classList.remove('is-showing'), TOAST_MS);
+}
+
+// polite, off-screen status line for things a screen reader would otherwise
+// miss: the score changing and the clock getting low. cleared first, so the
+// same message twice in a row still gets read the second time
+function announce(message) {
+  const status = el('announcer');
+  status.textContent = '';
+  requestAnimationFrame(() => { status.textContent = message; });
 }
 
 // ---------------------------------------------------------------------------
@@ -188,6 +208,7 @@ async function startRound() {
   renderTimer(state.roundSeconds * 1000);
   el('wordOne').textContent = 'Get ready';
   el('wordThree').textContent = '';
+  el('cardNo').textContent = '';
 
   const finished = await runCountdown();
   if (!finished) return;
@@ -206,7 +227,7 @@ function stopRound() {
   state.running = false;
   _countdownToken++;
   cancelAnimationFrame(_frame);
-  el('countdown').classList.remove('is-open');
+  closeOverlay('countdown');
   releaseScreen();
 }
 
@@ -231,9 +252,11 @@ function tick() {
   _frame = requestAnimationFrame(tick);
 }
 
+// the fuse's fill and flame both hang off --left in the CSS, so one custom
+// property per frame moves the pair of them
 function renderTimer(msLeft) {
   const fraction = msLeft / (state.roundSeconds * 1000);
-  el('fuseFill').style.transform = `scaleX(${fraction})`;
+  el('fuse').style.setProperty('--left', fraction.toFixed(4));
   const seconds = Math.ceil(msLeft / 1000);
   if (seconds === _shownSeconds) return;
   _shownSeconds = seconds;
@@ -241,6 +264,10 @@ function renderTimer(msLeft) {
   el('timeValue').textContent = String(seconds);
   el('timeValue').classList.toggle('is-urgent', urgent);
   el('fuse').classList.toggle('is-urgent', urgent);
+  // only when the clock crosses the line, not on a round that starts short
+  if (urgent && seconds === URGENT_S && seconds < state.roundSeconds) {
+    announce(`${URGENT_S} seconds left.`);
+  }
 }
 
 function renderScore(delta = 0) {
@@ -249,7 +276,7 @@ function renderScore(delta = 0) {
   if (!delta || reducedMotion()) return;
   // resolved up front, var() inside Web Animations keyframes isn't dependable
   const flash = getComputedStyle(document.documentElement)
-    .getPropertyValue(delta < 0 ? '--bonk' : '--three').trim();
+    .getPropertyValue(delta < 0 ? '--flash-bad' : '--flash-good').trim();
   value.animate([
     { transform: 'scale(1)' },
     { transform: 'scale(1.45)', color: flash },
@@ -261,7 +288,7 @@ function runCountdown() {
   const token = ++_countdownToken;
   const steps = ['3', '2', '1', 'Go!'];
   const num = el('countdownNum');
-  el('countdown').classList.add('is-open');
+  openOverlay('countdown', 'skipCountdownBtn');
 
   return new Promise((resolve) => {
     let i = 0;
@@ -270,9 +297,11 @@ function runCountdown() {
       if (done) return; // a skip already finished it, so the pending step stops here
       done = true;
       el('countdown').removeEventListener('click', skip);
-      if (token === _countdownToken) el('countdown').classList.remove('is-open');
+      if (token === _countdownToken) closeOverlay('countdown');
       resolve(ok);
     };
+    // the dialog fills the screen, so this catches the Skip button (the
+    // click bubbles up) and a tap anywhere else alike
     const skip = () => { if (token === _countdownToken) finish(true); };
     el('countdown').addEventListener('click', skip);
 
@@ -301,6 +330,7 @@ function scoreCard(points, button) {
 
   state.score += points;
   renderScore(points);
+  announce(`${points > 0 ? 'Plus' : 'Minus'} ${Math.abs(points)}. Score ${state.score}.`);
   floatPoints(button, points);
   if (points < 0) bonk();
   showCard(drawCard(), points < 0 ? 'mad' : 'glad');
@@ -315,6 +345,7 @@ function showCard(card, exit) {
 
   el('wordOne').textContent = card['1'] ?? '';
   el('wordThree').textContent = card['3'] ?? '';
+  el('cardNo').textContent = `No. ${state.cardIndex}`;
 
   if (reducedMotion()) return;
   cardEl.animate([
@@ -327,8 +358,8 @@ function flingCopy(cardEl, exit) {
   const copy = cardEl.cloneNode(true);
   // ids have to stay unique, and a card mid-air shouldn't be read out again
   copy.removeAttribute('id');
-  copy.removeAttribute('aria-live');
   copy.querySelectorAll('[id]').forEach((node) => node.removeAttribute('id'));
+  copy.querySelectorAll('[aria-live]').forEach((node) => node.removeAttribute('aria-live'));
   copy.setAttribute('aria-hidden', 'true');
   copy.classList.add('card-ghost');
   el('cardSlot').appendChild(copy);
@@ -398,6 +429,62 @@ document.addEventListener('visibilitychange', () => {
 });
 
 // ---------------------------------------------------------------------------
+// torchlight
+// ---------------------------------------------------------------------------
+// with a mouse, the light comes from the torch cursor. it eases after the
+// pointer instead of sticking to it, so it feels carried rather than pinned
+// on. touch screens have no cursor between taps, so the glow stays put.
+// "is there a mouse" is decided by a mouse actually moving, not by asking
+// matchMedia('(pointer: fine)'): Firefox on Linux can answer no with a mouse
+// plugged in, which left the torch dead there
+function followTorch() {
+  const layers = [...document.querySelectorAll('.torch-layer')];
+  if (!layers.length) return;
+
+  // starts where the CSS parks it, so the first move glides from there
+  let x = innerWidth / 2;
+  let y = innerHeight * 0.12;
+  let targetX = x;
+  let targetY = y;
+  let lastFrameAt = 0;
+  let frame = 0;
+  const place = () => {
+    for (const layer of layers) layer.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+  };
+
+  const step = (now) => {
+    const dt = lastFrameAt ? Math.min(64, now - lastFrameAt) : 16.7;
+    lastFrameAt = now;
+    // scaled by frame time so it trails the same on a 60 Hz or a 144 Hz screen
+    const k = 1 - Math.pow(1 - LIGHT_EASE, dt / 16.7);
+    x += (targetX - x) * k;
+    y += (targetY - y) * k;
+    place();
+    // idle once it's caught up, rather than running a loop forever for nothing
+    if (Math.abs(targetX - x) + Math.abs(targetY - y) > 0.5) {
+      frame = requestAnimationFrame(step);
+    } else {
+      frame = 0;
+      lastFrameAt = 0;
+    }
+  };
+
+  addEventListener('pointermove', (e) => {
+    if (e.pointerType !== 'mouse' && e.pointerType !== 'pen') return;
+    document.documentElement.classList.add('has-mouse');
+    targetX = e.clientX + LIGHT_OFFSET_X;
+    targetY = e.clientY + LIGHT_OFFSET_Y;
+    if (reducedMotion()) {
+      x = targetX;
+      y = targetY;
+      place();
+      return;
+    }
+    if (!frame) frame = requestAnimationFrame(step);
+  }, { passive: true });
+}
+
+// ---------------------------------------------------------------------------
 // wiring
 // ---------------------------------------------------------------------------
 el('timeDown').addEventListener('click', () => nudgeRoundSeconds(-ROUND_STEP_S));
@@ -428,9 +515,30 @@ const openRules = () => openOverlay('rules', 'rulesCloseBtn');
 el('rulesBtn').addEventListener('click', openRules);
 el('roundRulesBtn').addEventListener('click', openRules);
 el('rulesCloseBtn').addEventListener('click', () => closeOverlay('rules'));
+// the dialog has no padding of its own, so a click whose target is the
+// dialog itself came through the backdrop
 el('rules').addEventListener('click', (e) => { if (e.target === el('rules')) closeOverlay('rules'); });
+
+// Escape would close these and strand you on a dead game screen: a
+// countdown that never finishes, or a round-over sheet gone with no
+// Next team button. both are over in a moment or have their own way out
+for (const id of ['countdown', 'roundOver']) {
+  el(id).addEventListener('cancel', (e) => e.preventDefault());
+}
+
+// 1, 3 and B or - score from a keyboard. ignored while typing, while a
+// dialog's up, with a modifier held (so browser shortcuts still work) and on
+// key repeat (a held key would burn through the deck)
 document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape' && el('rules').classList.contains('is-open')) closeOverlay('rules');
+  if (!state.running || e.repeat || e.ctrlKey || e.metaKey || e.altKey) return;
+  if (e.target.closest?.('input, textarea, select') || document.querySelector('dialog[open]')) return;
+  const selector = SCORE_KEYS[e.key.toLowerCase()];
+  if (!selector) return;
+  e.preventDefault();
+  const button = document.querySelector(selector);
+  button.classList.add('is-pressed');
+  setTimeout(() => button.classList.remove('is-pressed'), KEY_PRESS_MS);
+  scoreCard(Number(button.dataset.points), button);
 });
 
 el('rockLogo').addEventListener('click', (e) => {
@@ -444,3 +552,4 @@ el('rockLogo').addEventListener('animationend', (e) => {
 });
 
 restoreOptions();
+followTorch();

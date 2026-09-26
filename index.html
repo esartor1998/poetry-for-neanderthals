@@ -3,47 +3,100 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#2e231b">
+<meta name="theme-color" content="#1f1611">
+<meta name="color-scheme" content="dark">
 <meta name="description" content="A timer and card deck for playing Poetry for Neanderthals. One-syllable words only, or get bonked.">
 <title>Verses for Cave Men</title>
 <link rel="icon" href="favicon.ico" sizes="48x48">
 <link rel="icon" href="img/favicon.png" type="image/png" sizes="64x64">
 <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
-<!-- the font is vendored in fonts/ (SIL OFL, see fonts/OFL.txt) rather than
-     pulled off Google Fonts, so the front page makes no third-party requests -->
-<link rel="preload" href="fonts/titan-one-latin.woff2" as="font" type="font/woff2" crossorigin>
+<!-- the fonts are vendored in fonts/ (SIL OFL, see fonts/OFL.txt for Titan One
+     and fonts/OFL-EBGaramond.txt for EB Garamond) rather than pulled off
+     Google Fonts, so the front page makes no third-party requests.
+     no preload for them: the @font-face rules below are inline, so the
+     browser finds the fonts as early as a preload would, and Firefox warns
+     the preload unused -->
 
 <style>
+  /* ---- fonts --------------------------------------------------------------- */
+  /* EB Garamond is a variable font, so one file per style covers every weight
+     from 400 to 800. these are the latin subsets Google Fonts serves */
+  @font-face {
+    font-family: "EB Garamond";
+    src: url("fonts/eb-garamond-latin.woff2") format("woff2");
+    font-weight: 400 800;
+    font-style: normal;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: "EB Garamond";
+    src: url("fonts/eb-garamond-italic-latin.woff2") format("woff2");
+    font-weight: 400 800;
+    font-style: italic;
+    font-display: swap;
+  }
+  /* Titan One only shows up for BONK!, the cave man barging into the reading
+     room. everything else is the scholar's serif */
   @font-face {
     font-family: "Titan One";
     src: url("fonts/titan-one-latin.woff2") format("woff2");
     font-display: swap;
   }
 
+  /* registered so the gilt glint on the title can animate. an unregistered
+     custom property only flips between keyframes, it can't tween */
+  @property --shine {
+    syntax: "<percentage>";
+    inherits: false;
+    initial-value: -30%;
+  }
+
   :root {
-    --cave-deep:  #17110d;
-    --cave:       #2e231b;
-    --cave-hi:    #4a3526;
-    --hide:       rgba(255, 236, 214, .06);   /* translucent panels on the cave wall */
-    --hide-line:  rgba(255, 220, 180, .14);
-    --bone:       #f3e9d6;
-    --bone-dim:   #c9b89d;
-    --ink:        #2a211b;
-    --ochre:      #d9822f;   /* cave-painting orange, the one loud colour */
-    --ochre-hi:   #f0a14f;
-    --ochre-edge: #93531a;
-    --stone-hi:   #cfccc6;
-    --stone:      #a9a6a0;
-    --stone-lo:   #7c7974;
-    --bonk:       #c9503f;
-    --bonk-edge:  #8a3024;
-    --one:        #e2ad38;
-    --one-edge:   #9c7016;
-    --three:      #6f9d45;
-    --three-edge: #45692a;
-    --display: "Titan One", "Arial Black", Impact, system-ui, sans-serif;
-    --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-    --hewn: 26px 34px 28px 38px / 34px 26px 38px 28px;   /* lumpy corners, like a chipped slab */
+    color-scheme: dark;
+
+    --walnut-deep:   #120d0a;
+    --walnut:        #1f1611;
+    --walnut-hi:     #3a2a1f;
+    --leather:       #2c2019;
+    --parchment:     #efe3c8;
+    --parchment-lo:  #d9c7a0;
+    --parchment-burn:#a88b5c;   /* the scorched edge of a page */
+    --card-stock:    #f3ead3;
+    --vellum-dim:    #bfae8e;   /* secondary text on the dark wood */
+    --ink:           #2b1d14;
+    --ink-soft:      #5c4632;
+    --rubric:        #9e2b25;   /* red ink, like a manuscript's headings */
+    --ledger-blue:   #5a7fa6;   /* the ruled lines on a catalogue card */
+    --gilt:          #c9a24e;
+    --gilt-hi:       #e6c47a;
+    --gilt-pale:     #fff3d1;
+    --gilt-edge:     #7d5f22;
+    --oxblood:       #7b1e26;
+    --oxblood-hi:    #a3333b;
+    --oxblood-edge:  #4a0f15;
+    --bottle:        #2f5a3f;
+    --bottle-hi:     #6fa77f;
+    --bottle-edge:   #1a3525;
+    --flame-core:    #fff4d6;
+    --flame:         #ffb347;
+    --flame-edge:    #e0662a;
+    --spine-a:       #4d1a1c;
+    --spine-b:       #1f3a2a;
+    --spine-c:       #5a4424;
+    --spine-d:       #2a2440;
+
+    /* script.js reads these for the score flash, so they have to stay
+       readable against the dark HUD */
+    --flash-bad:     #d9544f;
+    --flash-good:    var(--bottle-hi);
+
+    --rule:        color-mix(in srgb, var(--gilt) 24%, transparent);
+    --rule-strong: color-mix(in srgb, var(--gilt) 55%, transparent);
+    --focus:       var(--gilt-hi);
+
+    --serif: "EB Garamond", Garamond, "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    --mono:  "Courier Prime", "Courier New", Courier, monospace;
+    --cave:  "Titan One", "Arial Black", Impact, system-ui, sans-serif;
     --spring: cubic-bezier(.2, .9, .3, 1.25);
   }
 
@@ -54,12 +107,18 @@
   body {
     min-height: 100vh;
     min-height: 100dvh;   /* dvh so mobile browser chrome doesn't push the buttons off-screen */
-    font-family: var(--sans);
-    color: var(--bone);
+    font-family: var(--serif);
+    font-size: 1.125rem;  /* Garamond runs small on the x-height, so we nudge it up */
+    line-height: 1.45;
+    color: var(--parchment);
     background:
-      radial-gradient(ellipse 90% 60% at 50% -10%, var(--cave-hi) 0%, transparent 70%),
-      linear-gradient(180deg, var(--cave) 0%, var(--cave-deep) 100%);
-    background-color: var(--cave-deep);
+      radial-gradient(ellipse 90% 60% at 50% -10%, var(--walnut-hi) 0%, transparent 70%),
+      /* wainscot seams, far enough apart that they read as panelling and
+         not as stripes */
+      repeating-linear-gradient(90deg, transparent 0 139px,
+        color-mix(in srgb, var(--walnut-deep) 55%, transparent) 139px 141px),
+      linear-gradient(180deg, var(--walnut) 0%, var(--walnut-deep) 100%);
+    background-color: var(--walnut-deep);
     background-attachment: fixed;
     overflow-x: hidden;
   }
@@ -76,23 +135,95 @@
     -webkit-tap-highlight-color: transparent;
   }
   button:focus-visible, input:focus-visible, .pack:focus-within {
-    outline: 3px solid var(--ochre-hi);
-    outline-offset: 2px;
+    outline: 3px solid var(--focus);
+    outline-offset: 3px;
+  }
+  /* headings get focus from script.js when a screen changes, so a screen
+     reader lands somewhere sensible. they aren't controls, so no ring */
+  [tabindex="-1"]:focus { outline: none; }
+
+  .sr-only {
+    position: absolute;
+    width: 1px; height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
 
   /* ---- torchlight ---------------------------------------------------------- */
-  /* a warm glow that never quite holds still, sitting over the whole page */
-  .torchlight {
-    position: fixed; inset: 0;
+  /* two layers of light that script.js walks after the mouse:
+       .torch-wall    sits behind everything, a faint glow on the panelling
+       .torch-surface sits over the page with soft-light, so the cards and
+                      panels warm up as the torch passes over them
+     both are fixed-size circles moved with transform, so following the
+     cursor only repositions them and never repaints a full-screen gradient.
+     the falloff is an eased curve (the "scrim" stops from CSS-Tricks'
+     easing gradients) rather than linear stops, because a linear fade reads
+     as a disc with a visible rim. screen and soft-light make them read as
+     light hitting things instead of an orange sheet laid on top */
+  .torch-layer {
+    position: fixed; left: 0; top: 0;
     pointer-events: none;
-    background: radial-gradient(55% 40% at 50% 12%, rgba(255, 150, 60, .22), transparent 72%);
-    animation: flicker 5s infinite steps(1, end);
-    z-index: 0;
+    transform: translate3d(50vw, 12vh, 0);
+    will-change: transform;
+    /* two smooth flickers with mismatched periods, so the pattern never
+       visibly repeats. scale is its own property, so it stacks with the
+       transform script.js sets instead of fighting it */
+    animation: flicker-glow 2.3s ease-in-out infinite, flicker-breathe 3.7s ease-in-out infinite;
   }
-  @keyframes flicker {
-    0%   { opacity: .85; }  9%  { opacity: 1; }    17% { opacity: .8; }
-    26%  { opacity: .95; }  38% { opacity: .78; }  51% { opacity: 1; }
-    63%  { opacity: .88; }  74% { opacity: .96; }  88% { opacity: .82; }
+  .torch-wall {
+    z-index: 0;
+    width: 1100px; height: 1100px;
+    margin: -550px 0 0 -550px;           /* so the transform places its centre, not its corner */
+    background: radial-gradient(closest-side,
+      rgba(255, 176, 96, 0.16) 0%,
+      rgba(247, 161, 85, 0.118) 19%,
+      rgba(241, 149, 76, 0.087) 34%,
+      rgba(236, 138, 68, 0.061) 47%,
+      rgba(232, 131, 62, 0.044) 56.5%,
+      rgba(228, 124, 57, 0.031) 65%,
+      rgba(225, 118, 52, 0.02) 73%,
+      rgba(222, 112, 48, 0.012) 80.2%,
+      rgba(220, 107, 44, 0.007) 86.1%,
+      rgba(218, 103, 41, 0.003) 91%,
+      rgba(216, 100, 39, 0.001) 95.2%,
+      rgba(215, 97, 37, 0) 98.2%,
+      rgba(214, 96, 36, 0) 100%);
+    mix-blend-mode: screen;
+  }
+  .torch-surface { display: none; }       /* phones: no torch in hand to light anything with */
+  @keyframes flicker-glow {
+    0%, 100% { opacity: .9; }
+    22%      { opacity: 1; }
+    47%      { opacity: .84; }
+    71%      { opacity: .96; }
+  }
+  @keyframes flicker-breathe {
+    0%, 100% { scale: 1; }
+    38%      { scale: 1.035; }
+    69%      { scale: .985; }
+  }
+
+  /* static film grain over the backgrounds (not the content). dark, subtle
+     gradients band into visible steps on 8-bit screens, and a little noise
+     breaks the steps up. overlay against 50% grey noise lightens and darkens
+     in equal measure, so it dithers without shifting the overall brightness */
+  body::after {
+    content: "";
+    position: fixed; inset: 0; z-index: 0;
+    pointer-events: none;
+    opacity: .07;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  /* candlelit rooms go dark at the corners. a vignette on the fixed layer
+     keeps the eye in the middle of the page where the controls are */
+  body::before {
+    content: "";
+    position: fixed; inset: 0; z-index: 0;
+    pointer-events: none;
+    background: radial-gradient(ellipse 120% 90% at 50% 35%, transparent 55%,
+      color-mix(in srgb, var(--walnut-deep) 85%, transparent) 100%);
   }
 
   /* ---- screens ------------------------------------------------------------- */
@@ -132,19 +263,57 @@
     transition: opacity .35s ease, transform .45s var(--spring), visibility 0s;
   }
 
-  /* ---- menu screen --------------------------------------------------------- */
-  #menuScreen { gap: 18px; }
+  /* ---- masthead ------------------------------------------------------------ */
+  #menuScreen { gap: 20px; }
 
   /* auto margins centre the menu when there's room, and let it scroll from
      the top when there isn't. justify-content: center would shove the title
      up past the top edge on a short phone, where you can't scroll to it */
-  .masthead { text-align: center; padding-top: 8px; margin-top: auto; }
+  .masthead { text-align: center; padding-top: 4px; margin-top: auto; }
+
+  /* a shelf of books with a gap in the middle where the rock is filed.
+     each background layer is one run of spines: a single spine plus its
+     gap, tiled along the shelf. the tile widths (29, 41, 23, 53) share no
+     common factor, so the runs drift against each other and the pattern
+     takes about a kilometre to repeat. that's the "cicada principle", and
+     it's why the shelf looks hand-stacked from four gradients */
+  .shelf {
+    position: relative;
+    display: flex; justify-content: center; align-items: flex-end;
+    height: 76px;
+    max-width: 22rem;
+    margin: 0 auto;
+    border-bottom: 6px solid var(--walnut-hi);
+    box-shadow: 0 6px 10px -4px var(--walnut-deep);
+  }
+  .shelf::before {
+    content: "";
+    position: absolute; inset: 0;
+    background:
+      linear-gradient(90deg, var(--spine-a) 0, color-mix(in srgb, var(--spine-a) 70%, var(--gilt)) 30%, var(--spine-a) 60%, transparent 60%) left bottom / 29px 50px repeat-x,
+      linear-gradient(90deg, var(--spine-b) 0, color-mix(in srgb, var(--spine-b) 75%, var(--gilt)) 25%, var(--spine-b) 45%, transparent 45%) left bottom / 41px 42px repeat-x,
+      linear-gradient(90deg, var(--spine-c) 0, color-mix(in srgb, var(--spine-c) 70%, var(--parchment)) 35%, var(--spine-c) 70%, transparent 70%) left bottom / 23px 56px repeat-x,
+      linear-gradient(90deg, var(--spine-d) 0, color-mix(in srgb, var(--spine-d) 75%, var(--gilt)) 20%, var(--spine-d) 40%, transparent 40%) left bottom / 53px 46px repeat-x;
+    /* fade the ends into the dark and cut a slot for the rock */
+    mask-image: linear-gradient(90deg,
+      transparent 0, #000 14%,
+      #000 calc(50% - 58px), transparent calc(50% - 54px),
+      transparent calc(50% + 54px), #000 calc(50% + 58px),
+      #000 86%, transparent 100%);
+    opacity: .85;
+  }
+
   .rock-logo {
+    position: relative;
     display: inline-block;
-    width: 84px; height: 44px;          /* 4x the 21x11 source, whole pixels only */
-    image-rendering: pixelated;
+    width: 84px; height: 44px;           /* 4x the 21x11 source, whole pixels only */
     animation: rock-bob 3.2s ease-in-out infinite;
     cursor: pointer;
+  }
+  .rock-logo img {
+    display: block;
+    width: 100%; height: 100%;
+    image-rendering: pixelated;
     filter: drop-shadow(0 6px 4px rgba(0, 0, 0, .45));
   }
   .rock-logo.is-tumbling { animation: rock-tumble .7s var(--spring); }
@@ -157,248 +326,534 @@
     40%  { transform: translateY(-28px) rotate(200deg); }
     100% { transform: translateY(0) rotate(360deg); }
   }
-  h1 {
-    font-family: var(--display);
-    font-weight: 400;
-    font-size: clamp(2.1rem, 11vw, 3rem);
-    line-height: 1;
-    letter-spacing: .01em;
-    color: var(--bone);
-    text-shadow: 0 3px 0 var(--ochre), 0 8px 18px rgba(0, 0, 0, .5);
-    margin-top: 10px;
-  }
-  .tagline { margin-top: 10px; color: var(--bone-dim); font-size: 1.02rem; }
-  .tagline b { color: var(--ochre-hi); }
 
+  /* the rock graduated. the mortarboard is pixel art drawn with box-shadow:
+     one 4px element, and every shadow is another 4px pixel at an offset, so
+     it matches the rock's 4x pixels without another image. no pixel sits at
+     0 0, because a box-shadow is never painted under its own element and
+     that pixel would vanish. the grid is 11 wide, rows top to bottom are the
+     board's top face, its front edge, then the skullcap. it sits on the
+     rock's highest bump (source pixels 8 to 16 on row 1) */
+  .mortarboard {
+    position: absolute;
+    left: 26px; top: -12px;
+    width: 4px; height: 4px;
+    transform: rotate(-9deg);
+    transform-origin: 22px 16px;
+    box-shadow:
+      12px 0px 0 var(--oxblood-hi),
+      16px 0px 0 var(--oxblood-hi),
+      20px 0px 0 var(--gilt),
+      24px 0px 0 var(--oxblood-hi),
+      28px 0px 0 var(--oxblood-hi),
+      0px 4px 0 var(--oxblood),
+      4px 4px 0 var(--oxblood),
+      8px 4px 0 var(--oxblood),
+      12px 4px 0 var(--oxblood),
+      16px 4px 0 var(--oxblood),
+      20px 4px 0 var(--oxblood),
+      24px 4px 0 var(--oxblood),
+      28px 4px 0 var(--oxblood),
+      32px 4px 0 var(--oxblood),
+      36px 4px 0 var(--oxblood),
+      40px 4px 0 var(--oxblood),
+      8px 8px 0 var(--oxblood-edge),
+      12px 8px 0 var(--oxblood-edge),
+      16px 8px 0 var(--oxblood-edge),
+      20px 8px 0 var(--oxblood-edge),
+      24px 8px 0 var(--oxblood-edge),
+      28px 8px 0 var(--oxblood-edge),
+      32px 8px 0 var(--oxblood-edge),
+      12px 12px 0 var(--oxblood-edge),
+      16px 12px 0 var(--oxblood-edge),
+      20px 12px 0 var(--oxblood-edge),
+      24px 12px 0 var(--oxblood-edge),
+      28px 12px 0 var(--oxblood-edge);
+  }
+  /* the tassel hangs off the board's right corner. its first pixel is the
+     element's own background (the one spot a shadow can't draw), and it
+     swings from its top edge on a period that doesn't match the bob, so the
+     two never settle into lockstep */
+  .tassel {
+    position: absolute;
+    left: 40px; top: 8px;
+    width: 4px; height: 4px;
+    background: var(--gilt);
+    box-shadow:
+      0 4px 0 var(--gilt),
+      0 8px 0 var(--gilt-hi),
+      -4px 12px 0 var(--gilt-hi),
+      0 12px 0 var(--gilt-hi);
+    transform-origin: 2px 0;
+    animation: tassel-swing 2.2s ease-in-out infinite;
+  }
+  .rock-logo.is-tumbling .tassel { animation: tassel-fling .7s ease-out; }
+  @keyframes tassel-swing {
+    0%, 100% { rotate: -14deg; }
+    50%      { rotate: 12deg; }
+  }
+  @keyframes tassel-fling {
+    0%   { rotate: 0deg; }
+    35%  { rotate: 70deg; }
+    70%  { rotate: -30deg; }
+    100% { rotate: 0deg; }
+  }
+
+  /* a ruled line either side of the words, drawn by the pseudo-elements
+     growing into whatever space the flex row has left */
+  .eyebrow {
+    display: flex; align-items: center; gap: 12px;
+    max-width: 19rem;
+    margin: 14px auto 0;
+    font-size: .9rem;
+    font-variant-caps: all-small-caps;
+    letter-spacing: .16em;
+    color: var(--vellum-dim);
+  }
+  .eyebrow::before, .eyebrow::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--rule-strong));
+  }
+  .eyebrow::after { background: linear-gradient(90deg, var(--rule-strong), transparent); }
+
+  /* gilt lettering. two gradients clipped to the glyphs: a vertical one for
+     the metal, and a thin bright band that --shine sweeps across now and
+     then like light catching a book spine. drop-shadow and not text-shadow,
+     since text-shadow paints over a background-clip: text fill and you get
+     a brown smear instead of gold */
+  .title {
+    font-family: var(--serif);
+    font-style: italic;
+    font-weight: 600;
+    font-size: clamp(2.4rem, 12vw, 3.4rem);
+    line-height: 1.02;
+    text-wrap: balance;
+    color: var(--gilt-hi);
+    margin-top: 6px;
+    padding: 0 .12em .08em;              /* room for italic overhang, which sits outside the clipped box */
+    filter: drop-shadow(0 2px 0 var(--walnut-deep)) drop-shadow(0 8px 14px rgba(0, 0, 0, .5));
+  }
+  @supports (background-clip: text) or (-webkit-background-clip: text) {
+    .title {
+      color: transparent;
+      background:
+        linear-gradient(105deg, transparent calc(var(--shine) - 9%), var(--gilt-pale) var(--shine), transparent calc(var(--shine) + 9%)),
+        linear-gradient(180deg, var(--gilt-hi) 10%, var(--gilt) 55%, var(--gilt-edge) 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      animation: glint 9s ease-in-out 1.2s infinite;
+    }
+  }
+  @keyframes glint {
+    0%        { --shine: -30%; }
+    16%, 100% { --shine: 130%; }
+  }
+
+  /* a ribbon banner. the notched swallowtail ends are clip-path, so there's
+     no extra markup for the tails */
+  .motto {
+    display: inline-block;
+    margin-top: 12px;
+    padding: 2px 30px 4px;
+    font-style: italic;
+    font-size: 1rem;
+    letter-spacing: .06em;
+    color: var(--parchment);
+    background: linear-gradient(180deg, var(--oxblood-hi), var(--oxblood) 60%, var(--oxblood-edge));
+    clip-path: polygon(0 0, 100% 0, calc(100% - 13px) 50%, 100% 100%, 0 100%, 13px 50%);
+  }
+  .tagline {
+    margin-top: 12px;
+    color: var(--vellum-dim);
+    font-size: 1.1rem;
+    text-wrap: balance;
+  }
+  .tagline a {
+    color: var(--gilt-hi);
+    font-weight: 600;
+    text-decoration: underline dotted;
+    text-underline-offset: 3px;
+    transition: color .15s;
+  }
+  .tagline a:hover { color: var(--parchment); text-decoration-style: solid; }
+
+  /* ---- the options panel --------------------------------------------------- */
+  /* tooled leather. the inner gilt rule is an outline pulled inside the box
+     with a negative offset, so the double border costs no extra element */
   .panel {
-    background: var(--hide);
-    border: 1px solid var(--hide-line);
-    border-radius: 20px;
-    padding: 18px;
-    display: grid; gap: 18px;
+    position: relative;
+    display: grid; gap: 22px;
+    padding: 24px 22px;
+    border-radius: 6px;
+    background:
+      radial-gradient(120% 70% at 50% 0%, color-mix(in srgb, var(--walnut-hi) 70%, transparent), transparent 70%),
+      color-mix(in srgb, var(--leather) 88%, transparent);
+    border: 1px solid var(--rule-strong);
+    outline: 1px solid var(--rule);
+    outline-offset: -8px;
+    box-shadow: 0 18px 40px rgba(0, 0, 0, .45), inset 0 1px 0 color-mix(in srgb, var(--parchment) 8%, transparent);
     backdrop-filter: blur(6px);
   }
   .field-label {
     display: block;
-    font-family: var(--display);
-    font-weight: 400;
-    font-size: 1.05rem;
-    letter-spacing: .02em;
+    font-size: 1.1rem;
+    font-weight: 600;
+    font-variant-caps: all-small-caps;
+    letter-spacing: .12em;
+    color: var(--gilt-hi);
     margin-bottom: 8px;
+  }
+  .field-hint {
+    margin-top: 6px;
+    font-size: .92rem;
+    font-style: italic;
+    color: var(--vellum-dim);
   }
 
   .stepper { display: flex; align-items: stretch; gap: 8px; }
   .stepper button {
-    width: 52px; border-radius: 14px;
-    font-family: var(--display); font-size: 1.5rem;
-    background: rgba(255, 236, 214, .1);
+    width: 52px; min-height: 52px;
+    border-radius: 6px;
+    font-size: 1.6rem; font-weight: 600; line-height: 1;
+    color: var(--gilt-hi);
+    background: color-mix(in srgb, var(--parchment) 7%, transparent);
+    border: 1px solid var(--rule);
     transition: background .15s, transform .12s;
   }
-  .stepper button:active { transform: scale(.92); background: rgba(255, 236, 214, .2); }
+  .stepper button:hover { background: color-mix(in srgb, var(--parchment) 13%, transparent); }
+  .stepper button:active { transform: scale(.92); }
   .stepper input {
     flex: 1; min-width: 0;
     text-align: center;
-    font: 1.6rem var(--display);
-    color: var(--bone);
-    background: rgba(0, 0, 0, .25);
-    border: 2px solid var(--hide-line);
-    border-radius: 14px;
-    padding: 10px 6px;
+    font: 600 1.7rem var(--serif);
+    font-variant-numeric: lining-nums tabular-nums;
+    color: var(--parchment);
+    background: color-mix(in srgb, var(--walnut-deep) 60%, transparent);
+    border: 1px solid var(--rule-strong);
+    border-radius: 6px;
+    padding: 6px;
     -moz-appearance: textfield;
     appearance: textfield;
   }
   .stepper input::-webkit-inner-spin-button,
   .stepper input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-  .stepper-unit { align-self: center; color: var(--bone-dim); font-size: .9rem; }
+  .stepper-unit { align-self: center; color: var(--vellum-dim); font-style: italic; }
 
-  /* card packs are real checkboxes, dressed up as chunky toggle chips */
-  .packs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-  .pack { position: relative; display: block; cursor: pointer; border-radius: 14px; }
+  /* the range hint turns into the warning the moment the number stops being
+     one script.js will accept. :has() lets the field style itself off its
+     own input, so there's no validation code for the live feedback */
+  #timeField:has(input:invalid) .stepper input { border-color: var(--flash-bad); }
+  #timeField:has(input:invalid) .field-hint { color: var(--flash-bad); font-style: normal; font-weight: 600; }
+
+  /* card packs are real checkboxes, dressed as bookplates. unchecked is a
+     dashed empty slot, checked is a pasted-in plate with a wax seal, so the
+     state reads from shape and not only from colour */
+  .packs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .pack { position: relative; display: block; cursor: pointer; border-radius: 6px; }
   .pack input { position: absolute; opacity: 0; pointer-events: none; }
   .pack-face {
+    position: relative;
     display: flex; flex-direction: column; gap: 2px;
-    height: 100%;
-    padding: 11px 12px;
-    border-radius: 14px;
-    border: 2px solid var(--hide-line);
-    background: rgba(0, 0, 0, .18);
-    font-size: .9rem; line-height: 1.25;
-    color: var(--bone-dim);
+    height: 100%; min-height: 58px;
+    padding: 10px 34px 10px 12px;
+    border-radius: 6px;
+    border: 1px dashed var(--rule-strong);
+    background: color-mix(in srgb, var(--walnut-deep) 35%, transparent);
+    line-height: 1.2;
+    color: var(--vellum-dim);
     transition: background .2s, border-color .2s, color .2s, transform .25s var(--spring);
   }
-  .pack-face small { font-size: .78rem; opacity: .8; }
+  .pack-face small { font-size: .85rem; font-style: italic; }
+  .pack:hover .pack-face { border-color: var(--gilt); }
   .pack:active .pack-face { transform: scale(.96); }
   .pack input:checked + .pack-face {
     color: var(--ink);
-    background: var(--ochre-hi);
-    border-color: var(--ochre);
+    border: 1px solid var(--gilt-edge);
+    background:
+      radial-gradient(120% 90% at 20% 10%, color-mix(in srgb, var(--gilt-pale) 60%, transparent), transparent 60%),
+      var(--parchment);
+    box-shadow: 0 3px 0 var(--parchment-burn), 0 8px 14px rgba(0, 0, 0, .35);
     transform: rotate(-1deg);
   }
   .pack:nth-child(even) input:checked + .pack-face { transform: rotate(1deg); }
+  .pack input:checked + .pack-face small { color: var(--ink-soft); }
+  /* the seal is a lumpy blob from uneven border radii, and the tick is an
+     L of two borders turned 45 degrees */
+  .pack-face::before, .pack-face::after {
+    content: "";
+    position: absolute;
+    scale: 0;
+    transition: scale .35s var(--spring);
+  }
+  .pack-face::before {
+    top: 9px; right: 8px;
+    width: 22px; height: 22px;
+    border-radius: 48% 52% 45% 55% / 55% 45% 55% 45%;
+    background: radial-gradient(circle at 35% 30%, var(--oxblood-hi), var(--oxblood) 60%, var(--oxblood-edge));
+    box-shadow: 0 1px 2px rgba(0, 0, 0, .4);
+  }
+  .pack-face::after {
+    top: 13px; right: 16px;
+    width: 6px; height: 11px;
+    border: solid var(--parchment);
+    border-width: 0 2px 2px 0;
+    rotate: 45deg;
+  }
+  .pack input:checked + .pack-face::before,
+  .pack input:checked + .pack-face::after { scale: 1; }
 
-  /* ---- stone buttons ------------------------------------------------------- */
-  /* the thick bottom edge is a box-shadow, so pressing one sinks it into
-     that edge rather than scaling the whole thing */
+  .packs-hint { display: none; }
+  #packsField:not(:has(input:checked)) .packs-hint { display: block; color: var(--flash-bad); font-style: normal; font-weight: 600; }
+
+  /* ---- buttons ------------------------------------------------------------- */
+  /* leather-bound blocks. the thick bottom edge is a box-shadow, so pressing
+     one sinks it into that edge rather than scaling the whole thing. the
+     inset pair draws a gilt tooled line just inside the edge, and has to be
+     repeated in the pressed state or it would vanish on press */
   .slab-btn {
-    --face: var(--ochre);
-    --edge: var(--ochre-edge);
+    --face: var(--oxblood);
+    --face-hi: var(--oxblood-hi);
+    --edge: var(--oxblood-edge);
+    --tooling: color-mix(in srgb, var(--gilt) 55%, transparent);
     position: relative;
     display: flex; flex-direction: column; align-items: center; justify-content: center;
-    font-family: var(--display);
-    color: var(--ink);
-    background: var(--face);
-    border-radius: 18px 22px 18px 24px / 22px 18px 24px 18px;
-    box-shadow: 0 6px 0 var(--edge), 0 10px 18px rgba(0, 0, 0, .35);
+    font-weight: 600;
+    color: var(--parchment);
+    background: linear-gradient(180deg, var(--face-hi) -40%, var(--face) 55%);
+    border-radius: 7px;
+    box-shadow:
+      inset 0 0 0 5px var(--face), inset 0 0 0 6px var(--tooling),
+      0 6px 0 var(--edge), 0 10px 18px rgba(0, 0, 0, .4);
     transition: transform .08s ease, box-shadow .08s ease, filter .15s;
   }
-  .slab-btn:hover { filter: brightness(1.06); }
+  .slab-btn:hover { filter: brightness(1.08); }
   .slab-btn:active, .slab-btn.is-pressed {
     transform: translateY(6px);
-    box-shadow: 0 0 0 var(--edge), 0 3px 8px rgba(0, 0, 0, .35);
+    box-shadow:
+      inset 0 0 0 5px var(--face), inset 0 0 0 6px var(--tooling),
+      0 0 0 var(--edge), 0 3px 8px rgba(0, 0, 0, .4);
   }
   .slab-btn:disabled { filter: saturate(.3) brightness(.8); cursor: default; }
 
-  .menu-actions { display: grid; grid-template-columns: 1fr auto; gap: 12px; margin-top: 4px; }
-  #startBtn { font-size: 1.6rem; padding: 16px; }
+  .menu-actions { display: grid; grid-template-columns: 1fr auto; gap: 12px; margin-top: 2px; }
+  #startBtn {
+    font-size: 1.7rem; font-style: italic; letter-spacing: .02em;
+    padding: 14px;
+  }
   .ghost-btn {
-    font-family: var(--display);
-    font-size: 1rem;
+    min-height: 48px;
     padding: 0 18px;
-    border-radius: 18px;
-    border: 2px solid var(--hide-line);
-    color: var(--bone);
-    background: rgba(255, 236, 214, .06);
+    font-size: 1.05rem;
+    font-style: italic;
+    border-radius: 7px;
+    border: 1px solid var(--rule-strong);
+    color: var(--parchment);
+    background: color-mix(in srgb, var(--parchment) 5%, transparent);
     transition: background .15s, transform .12s;
   }
-  .ghost-btn:hover { background: rgba(255, 236, 214, .12); }
+  .ghost-btn:hover { background: color-mix(in srgb, var(--parchment) 12%, transparent); }
   .ghost-btn:active { transform: scale(.95); }
 
   .credits {
     margin-bottom: auto;
     text-align: center;
-    font-size: .78rem; line-height: 1.6;
-    color: var(--bone-dim);
-    opacity: .75;
+    font-size: .92rem; line-height: 1.55;
+    font-style: italic;
+    color: var(--vellum-dim);
+    text-wrap: balance;
   }
-  .credits a { color: inherit; }
+  .credits a { color: inherit; text-underline-offset: 2px; }
+  .credits a:hover { color: var(--parchment); }
 
   /* ---- game screen --------------------------------------------------------- */
   #gameScreen { gap: 14px; user-select: none; -webkit-user-select: none; }
 
   .hud { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px; }
   .hud-btn {
-    font-family: var(--display);
-    font-size: .95rem;
-    padding: 10px 14px;
-    border-radius: 14px;
-    background: rgba(255, 236, 214, .08);
-    border: 1px solid var(--hide-line);
+    min-height: 44px;
+    padding: 0 14px;
+    font-size: 1.05rem;
+    font-variant-caps: all-small-caps;
+    letter-spacing: .08em;
+    border-radius: 7px;
+    background: color-mix(in srgb, var(--parchment) 6%, transparent);
+    border: 1px solid var(--rule);
     transition: background .15s, transform .12s;
   }
+  .hud-btn:hover { background: color-mix(in srgb, var(--parchment) 12%, transparent); }
   .hud-btn:active { transform: scale(.93); }
-  .hud-stats { display: flex; justify-content: center; gap: 22px; }
+  .hud-stats { display: flex; justify-content: center; gap: 24px; }
   .stat { text-align: center; line-height: 1; }
   .stat-value {
     display: block;
-    font-family: var(--display);
-    font-size: 2.1rem;
-    font-variant-numeric: tabular-nums;
+    font-size: 2.3rem;
+    font-weight: 600;
+    font-variant-numeric: lining-nums tabular-nums;
   }
   .stat-label {
-    display: block; margin-top: 4px;
-    font-size: .72rem; letter-spacing: .12em; text-transform: uppercase;
-    color: var(--bone-dim);
+    display: block; margin-top: 3px;
+    font-size: .95rem;
+    font-variant-caps: all-small-caps;
+    letter-spacing: .14em;
+    color: var(--vellum-dim);
   }
-  #timeValue.is-urgent { color: var(--bonk); animation: urgent-pulse 1s ease-in-out infinite; }
+  #timeValue.is-urgent { color: var(--flash-bad); animation: urgent-pulse 1s ease-in-out infinite; }
   @keyframes urgent-pulse {
     0%, 100% { transform: scale(1); }
     50%      { transform: scale(1.18); }
   }
 
-  /* the torch, burning down left to right over the round */
-  .fuse { height: 10px; border-radius: 99px; background: rgba(0, 0, 0, .35); overflow: hidden; }
+  /* a slow match burning down the round. script.js only sets --left (1 down
+     to 0) on .fuse, and CSS does the rest: the fill scales by it, and the
+     flame rides the burning end with translate in cqi, container query units
+     that are a percentage of the fuse's own width. a plain percentage in
+     translate would be the flame's width, not the track's */
+  .fuse {
+    --left: 1;
+    position: relative;
+    container-type: inline-size;
+    height: 26px;
+    display: flex; align-items: center;
+  }
+  .fuse-track {
+    flex: 1;
+    height: 6px;
+    border-radius: 99px;
+    background: color-mix(in srgb, var(--walnut-deep) 80%, transparent);
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, .6), 0 1px 0 var(--rule);
+    overflow: hidden;
+  }
   .fuse-fill {
     height: 100%;
-    background: linear-gradient(90deg, var(--ochre), var(--ochre-hi) 70%, #ffe2a8);
+    background: linear-gradient(90deg, var(--parchment-burn), var(--parchment) 85%, var(--flame));
     transform-origin: left center;
-    box-shadow: 0 0 12px rgba(255, 170, 80, .7);
+    scale: var(--left) 1;
   }
-  .fuse.is-urgent .fuse-fill { background: linear-gradient(90deg, var(--bonk-edge), var(--bonk) 70%, #ffb3a0); }
+  .fuse-flame {
+    position: absolute; left: -7px; top: -3px;
+    width: 14px; height: 20px;
+    translate: calc(var(--left) * 100cqi) 0;
+    pointer-events: none;
+  }
+  /* a teardrop is a circle with one square corner, turned so the corner
+     points up */
+  .fuse-flame::before {
+    content: "";
+    position: absolute; inset: 3px 1px 0;
+    border-radius: 50% 0 50% 50%;
+    rotate: -45deg;
+    background: radial-gradient(circle at 60% 40%, var(--flame-core) 0 22%, var(--flame) 50%, var(--flame-edge) 85%);
+    box-shadow: 0 0 12px 3px color-mix(in srgb, var(--flame) 55%, transparent);
+    transform-origin: 50% 70%;
+    animation: flame-dance .6s ease-in-out infinite alternate;
+  }
+  @keyframes flame-dance {
+    0%   { transform: scale(1, 1) skewX(0deg); }
+    40%  { transform: scale(.92, 1.08) skewX(-4deg); }
+    100% { transform: scale(1.05, .95) skewX(3deg); }
+  }
+  .fuse.is-urgent .fuse-fill { background: linear-gradient(90deg, var(--oxblood-edge), var(--oxblood-hi) 80%, var(--flame)); }
+  .fuse.is-urgent .fuse-flame::before { animation-duration: .25s; filter: hue-rotate(-18deg) saturate(1.4); }
 
   /* ---- the card ------------------------------------------------------------ */
+  /* the drop-shadow lives on the slot, not the card, because the card is
+     masked for its punch hole and a mask clips the element's own shadows.
+     filtering the parent shadows the masked shape, so you see the shadow
+     through the hole */
   .card-slot {
     position: relative;
     flex: 1;
-    min-height: 220px;
+    min-height: 240px;
     display: grid;
+    filter: drop-shadow(0 14px 18px rgba(0, 0, 0, .55));
   }
+  /* a library catalogue card: a red header rule, faint blue ledger lines,
+     and a hole at the bottom for the drawer rod */
   .card {
+    --hole-y: 20px;                      /* from the bottom edge to the centre of the hole */
     position: relative;
     grid-area: 1 / 1;
     container-type: inline-size;
-    display: flex; flex-direction: column; justify-content: center;
-    padding: 22px 20px;
+    display: flex; flex-direction: column;
+    padding: 12px 20px 48px;
     color: var(--ink);
-    border-radius: var(--hewn);
+    border-radius: 6px;
+    rotate: -.6deg;
     background:
-      radial-gradient(120% 80% at 25% 15%, var(--stone-hi), transparent 60%),
-      linear-gradient(160deg, var(--stone) 0%, var(--stone-lo) 100%);
-    box-shadow:
-      inset 0 3px 0 rgba(255, 255, 255, .35),
-      inset 0 -8px 0 rgba(0, 0, 0, .18),
-      0 16px 34px rgba(0, 0, 0, .5);
+      linear-gradient(180deg, transparent 43px, color-mix(in srgb, var(--rubric) 70%, transparent) 43px 45px, transparent 45px),
+      repeating-linear-gradient(180deg, transparent 0 31px, color-mix(in srgb, var(--ledger-blue) 22%, transparent) 31px 32px) 0 45px / 100% 100% no-repeat,
+      radial-gradient(120% 80% at 20% 10%, color-mix(in srgb, #fff 45%, transparent), transparent 60%),
+      var(--card-stock);
+    mask: radial-gradient(circle 9px at 50% calc(100% - var(--hole-y)), transparent 8px, #000 9px);
     overflow: hidden;
-  }
-  /* speckle, so it reads as rock rather than a grey rectangle */
-  .card::before {
-    content: "";
-    position: absolute; inset: 0;
-    pointer-events: none;
-    background-image:
-      radial-gradient(circle at 20% 30%, rgba(0, 0, 0, .14) 0 1.5px, transparent 2px),
-      radial-gradient(circle at 70% 60%, rgba(255, 255, 255, .18) 0 1px, transparent 1.5px),
-      radial-gradient(circle at 45% 80%, rgba(0, 0, 0, .1) 0 2px, transparent 2.5px);
-    background-size: 23px 19px, 17px 21px, 31px 27px;
   }
   .card-ghost { pointer-events: none; z-index: 2; }
 
+  .card-head {
+    display: flex; justify-content: space-between; gap: 12px;
+    height: 32px;
+    align-items: center;
+    font-family: var(--mono);
+    font-size: .8rem;
+    letter-spacing: .04em;
+    color: var(--ink-soft);
+    white-space: nowrap;
+  }
+  .card-words {
+    flex: 1;
+    display: flex; flex-direction: column; justify-content: center;
+    padding-top: 10px;
+  }
+
   .word-row { position: relative; display: flex; align-items: center; gap: 14px; }
+  /* wax seals, with the same lumpy radii trick as the pack seals */
   .badge {
     flex: none;
     display: grid; place-items: center;
-    width: 44px; height: 44px;
-    border-radius: 50% 46% 52% 48%;
-    font-family: var(--display); font-size: 1.35rem;
-    box-shadow: 0 3px 0 rgba(0, 0, 0, .25);
+    width: 46px; height: 46px;
+    border-radius: 47% 53% 50% 50% / 54% 46% 54% 46%;
+    font-size: 1.5rem; font-weight: 700;
+    box-shadow: inset 0 0 0 3px color-mix(in srgb, #000 12%, transparent), 0 2px 3px rgba(0, 0, 0, .35);
   }
-  .badge-one   { background: var(--one); color: var(--ink); }
-  .badge-three { background: var(--three); color: var(--bone); }
+  .badge-one   { background: radial-gradient(circle at 35% 30%, var(--gilt-hi), var(--gilt) 65%); color: var(--ink); }
+  .badge-three { background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--bottle) 70%, var(--bottle-hi)), var(--bottle) 65%); color: var(--parchment); }
   .word {
-    font-family: var(--display);
-    font-weight: 400;
-    font-size: clamp(1.4rem, 10cqi, 2.5rem);
-    line-height: 1.08;
+    font-weight: 700;
+    font-size: clamp(1.6rem, 11cqi, 2.7rem);
+    line-height: 1.05;
     overflow-wrap: anywhere;
+    text-wrap: balance;
   }
-  .word-three { font-size: clamp(1.25rem, 8.5cqi, 2.1rem); }
-  .chisel {
+  .word-three { font-style: italic; font-weight: 600; font-size: clamp(1.4rem, 9cqi, 2.3rem); }
+
+  /* a hairline with a diamond at its centre, like a printer's ornament */
+  .flourish {
     position: relative;
-    height: 3px; margin: 18px 4px;
-    border-radius: 3px;
-    background: linear-gradient(90deg, transparent, rgba(0, 0, 0, .22) 12%, rgba(0, 0, 0, .22) 88%, transparent);
-    box-shadow: 0 1px 0 rgba(255, 255, 255, .35);
+    height: 1px; margin: 20px 8px;
+    background: linear-gradient(90deg, transparent, var(--ink-soft) 15%, var(--ink-soft) 85%, transparent);
+  }
+  .flourish::after {
+    content: "";
+    position: absolute; left: 50%; top: 50%;
+    width: 8px; height: 8px;
+    translate: -50% -50%;
+    rotate: 45deg;
+    background: var(--rubric);
+    box-shadow: 0 0 0 4px var(--card-stock);
   }
 
   /* BONK! pops over the card when the poet slips up */
   .bonk-pop {
     position: absolute; top: 42%; left: 50%;
     z-index: 3;
-    font-family: var(--display);
+    font-family: var(--cave);
     font-size: clamp(3rem, 18vw, 5rem);
-    color: var(--bonk);
-    -webkit-text-stroke: 3px var(--bone);
+    color: var(--oxblood-hi);
+    -webkit-text-stroke: 3px var(--parchment);
     paint-order: stroke fill;
-    text-shadow: 0 6px 0 var(--bonk-edge);
+    text-shadow: 0 6px 0 var(--oxblood-edge);
     pointer-events: none;
     opacity: 0;
     transform: translate(-50%, -50%) scale(.3) rotate(-12deg);
@@ -422,41 +877,236 @@
 
   /* ---- scoring buttons ----------------------------------------------------- */
   .score-btns { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding-bottom: 6px; }
-  .score-btn { min-height: 92px; padding: 10px 4px 12px; }
-  .score-btn .pts { font-size: 2.3rem; line-height: 1; }
-  .score-btn .what { font-family: var(--sans); font-weight: 700; font-size: .78rem; margin-top: 6px; opacity: .85; }
-  .score-btn.minus { --face: var(--bonk);  --edge: var(--bonk-edge);  color: var(--bone); }
-  .score-btn.one   { --face: var(--one);   --edge: var(--one-edge); }
-  .score-btn.three { --face: var(--three); --edge: var(--three-edge); color: var(--bone); }
+  .score-btn { min-height: 96px; padding: 10px 6px 12px; }
+  .score-btn .pts { font-size: 2.4rem; font-weight: 700; line-height: 1; font-variant-numeric: lining-nums; }
+  .score-btn .what { font-style: italic; font-weight: 500; font-size: .95rem; margin-top: 4px; line-height: 1.1; }
+  .score-btn.minus { --face: var(--oxblood); --face-hi: var(--oxblood-hi); --edge: var(--oxblood-edge); }
+  .score-btn.one {
+    --face: var(--gilt); --face-hi: var(--gilt-hi); --edge: var(--gilt-edge);
+    --tooling: color-mix(in srgb, var(--ink) 35%, transparent);
+    color: var(--ink);
+  }
+  .score-btn.three { --face: var(--bottle); --face-hi: var(--bottle-hi); --edge: var(--bottle-edge); }
+
+  /* keyboard shortcut hints. only drawn once a mouse has moved, which is our
+     stand-in for "there's a keyboard here too". aria-hidden in the markup,
+     since aria-keyshortcuts already tells a screen reader */
+  .key {
+    display: none;
+    position: absolute; top: 7px; right: 8px;
+    min-width: 1.4em;
+    padding: 0 4px;
+    font: 600 .72rem/1.5 var(--mono);
+    border: 1px solid currentColor;
+    border-radius: 4px;
+    opacity: .7;
+  }
+  html.has-mouse .key { display: block; }
 
   /* the "+3" that floats up off a button when it's tapped */
   .float-pts {
     position: absolute; left: 50%; top: 0;
-    font-family: var(--display); font-size: 1.8rem;
-    color: var(--bone);
-    text-shadow: 0 3px 0 rgba(0, 0, 0, .35);
+    font-size: 2rem; font-weight: 700; font-style: italic;
+    color: var(--gilt-pale);
+    text-shadow: 0 3px 0 rgba(0, 0, 0, .35), 0 0 14px color-mix(in srgb, var(--flame) 60%, transparent);
     pointer-events: none;
     white-space: nowrap;
   }
 
-  /* ---- overlays: countdown, round over, rules ------------------------------ */
-  .overlay {
-    position: fixed; inset: 0; z-index: 10;
-    display: grid; place-items: center;
-    padding: 20px;
-    background: rgba(15, 10, 7, .72);
-    backdrop-filter: blur(4px);
-    opacity: 0; visibility: hidden;
-    transition: opacity .25s ease, visibility 0s linear .25s;
+  /* ---- dialogs ------------------------------------------------------------- */
+  /* native <dialog> with showModal(), so focus is trapped, the page behind
+     goes inert and Escape works without us writing any of it. the fade in
+     uses @starting-style (the styles to transition from on the first frame
+     open), and the fade out works because display and overlay transition
+     with allow-discrete, which holds the dialog in the top layer until the
+     fade finishes. browsers that know neither just open and close instantly */
+  dialog {
+    color: inherit;
+    opacity: 0;
+    transition:
+      opacity .28s ease,
+      transform .4s var(--spring),
+      overlay .28s ease allow-discrete,
+      display .28s ease allow-discrete;
   }
-  .overlay.is-open { opacity: 1; visibility: visible; transition: opacity .25s ease, visibility 0s; }
+  dialog[open] { opacity: 1; }
+  dialog::backdrop {
+    background: color-mix(in srgb, var(--walnut-deep) 0%, transparent);
+    transition:
+      background .28s ease,
+      backdrop-filter .28s ease,
+      overlay .28s ease allow-discrete,
+      display .28s ease allow-discrete;
+  }
+  dialog[open]::backdrop {
+    background: color-mix(in srgb, var(--walnut-deep) 78%, transparent);
+    backdrop-filter: blur(4px) sepia(.35);
+  }
+  @starting-style {
+    dialog[open] { opacity: 0; }
+    dialog[open]::backdrop { background: color-mix(in srgb, var(--walnut-deep) 0%, transparent); backdrop-filter: none; }
+  }
 
-  #countdown { cursor: pointer; }
+  /* pages of parchment. the dialog itself has no padding, so a click that
+     lands on the dialog element and not a child is a click on the backdrop */
+  .sheet {
+    --focus: var(--rubric);
+    width: min(100% - 32px, 28rem);
+    max-width: none;
+    max-height: calc(100dvh - 32px);
+    margin: auto;
+    padding: 0;
+    border: 0;
+    border-radius: 3px;
+    color: var(--ink);
+    background:
+      radial-gradient(ellipse at 15% 0%, color-mix(in srgb, #fff 40%, transparent), transparent 55%),
+      radial-gradient(ellipse at 100% 100%, color-mix(in srgb, var(--parchment-burn) 35%, transparent), transparent 60%),
+      var(--parchment);
+    box-shadow:
+      inset 0 0 50px color-mix(in srgb, var(--parchment-burn) 55%, transparent),
+      0 24px 60px rgba(0, 0, 0, .65);
+    transform: translateY(30px) scale(.96) rotate(-.4deg);
+  }
+  .sheet[open] { display: flex; flex-direction: column; transform: rotate(-.4deg); }
+  @starting-style {
+    .sheet[open] { transform: translateY(30px) scale(.96) rotate(-.4deg); }
+  }
+  .sheet-body {
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 26px 24px;
+  }
+
+  #roundOver .sheet-body { text-align: center; display: grid; gap: 12px; }
+  .times-up {
+    font-size: clamp(3.2rem, 17vw, 4.6rem);
+    font-style: italic;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--rubric);
+    rotate: -3deg;
+  }
+  #roundOver[open] .times-up { animation: slam .55s var(--spring); }
+  @keyframes slam {
+    0%   { transform: scale(2.6) rotate(-7deg); opacity: 0; }
+    60%  { transform: scale(.94); opacity: 1; }
+    100% { transform: scale(1); }
+  }
+  .tempus {
+    margin-top: -4px;
+    font-style: italic;
+    font-variant-caps: all-small-caps;
+    letter-spacing: .14em;
+    color: var(--ink-soft);
+  }
+  .final-score { font-size: 4.6rem; font-weight: 700; line-height: 1; font-variant-numeric: lining-nums tabular-nums; }
+  .final-label { color: var(--ink-soft); font-variant-caps: all-small-caps; letter-spacing: .14em; }
+  .round-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 6px; }
+  .round-actions .slab-btn { font-size: 1.25rem; padding: 14px 8px; }
+  .slab-btn.secondary {
+    --face: var(--parchment-lo);
+    --face-hi: var(--parchment);
+    --edge: var(--parchment-burn);
+    --tooling: color-mix(in srgb, var(--ink) 30%, transparent);
+    color: var(--ink);
+  }
+  .pass-hint { color: var(--ink-soft); font-style: italic; }
+  .sheet .ghost-btn {
+    color: var(--ink);
+    border-color: color-mix(in srgb, var(--ink) 35%, transparent);
+    background: transparent;
+  }
+  .sheet .ghost-btn:hover { background: color-mix(in srgb, var(--ink) 7%, transparent); }
+
+  /* ---- rules --------------------------------------------------------------- */
+  .rules h2 {
+    font-size: 2rem; font-style: italic; font-weight: 600;
+    line-height: 1.1;
+    margin-bottom: 10px;
+  }
+  /* rubrics: headings in red ink and small caps, the way a scribe would
+     have marked a new section */
+  .rules h3 {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 1.2rem; font-weight: 600;
+    font-variant-caps: all-small-caps;
+    letter-spacing: .12em;
+    color: var(--rubric);
+    margin: 20px 0 8px;
+  }
+  .rules h3::after {
+    content: "";
+    flex: 1; height: 1px;
+    background: linear-gradient(90deg, color-mix(in srgb, var(--rubric) 60%, transparent), transparent);
+  }
+  .lede { line-height: 1.5; text-wrap: pretty; }
+  /* a drop cap. initial-letter sinks it exactly three lines and lines the
+     cap height up with the first line, where supported. the float version
+     is the fallback for browsers without it (Firefox, at the time of
+     writing), and is close enough */
+  .lede::first-letter {
+    float: left;
+    font-size: 3.4em; line-height: .8;
+    padding: .06em .08em 0 0;
+    font-weight: 700;
+    color: var(--rubric);
+  }
+  @supports (initial-letter: 3) or (-webkit-initial-letter: 3) {
+    .lede::first-letter {
+      float: none;
+      font-size: inherit; line-height: inherit;
+      padding: 0 .1em 0 0;
+      -webkit-initial-letter: 3;
+      initial-letter: 3;
+    }
+  }
+  .rules li { line-height: 1.45; text-wrap: pretty; }
+  .rules li::marker { color: var(--rubric); }
+  .rules ul { padding-left: 1.2em; display: grid; gap: 7px; }
+  .rules .example { color: var(--ink-soft); font-style: italic; margin-top: 2px; }
+  .rules .example b { color: var(--bottle); }
+  .rules .example s { color: var(--rubric); }
+  .rules kbd {
+    font: 600 .85em var(--mono);
+    padding: 0 5px;
+    border: 1px solid color-mix(in srgb, var(--ink) 40%, transparent);
+    border-bottom-width: 2px;
+    border-radius: 4px;
+  }
+  .pill {
+    display: inline-block; min-width: 2.2em;
+    padding: 0 6px; border-radius: 5px;
+    font-weight: 700; text-align: center;
+    line-height: 1.35;
+  }
+  .pill.minus { background: var(--oxblood); color: var(--parchment); }
+  .pill.one   { background: var(--gilt); color: var(--ink); }
+  .pill.three { background: var(--bottle); color: var(--parchment); }
+  .rules-close { width: 100%; margin-top: 24px; padding: 14px; font-size: 1.3rem; font-style: italic; }
+
+  /* ---- countdown ----------------------------------------------------------- */
+  /* a dialog as well, so the skip button is reachable by keyboard and the
+     round behind it can't be tabbed into. it fills the screen, so a tap
+     anywhere lands on it and skips */
+  .countdown {
+    width: 100%; height: 100%;
+    max-width: none; max-height: none;
+    margin: 0; padding: 24px;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+  }
+  .countdown[open] { display: grid; grid-template-rows: 1fr auto auto; place-items: center; gap: 10px; }
   .countdown-num {
-    font-family: var(--display);
-    font-size: clamp(6rem, 40vw, 11rem);
-    color: var(--bone);
-    text-shadow: 0 8px 0 var(--ochre), 0 20px 40px rgba(0, 0, 0, .6);
+    font-size: clamp(7rem, 42vw, 12rem);
+    font-style: italic;
+    font-weight: 700;
+    line-height: 1;
+    font-variant-numeric: lining-nums;
+    color: var(--gilt-hi);
+    text-shadow: 0 6px 0 var(--gilt-edge), 0 0 60px color-mix(in srgb, var(--flame) 45%, transparent);
   }
   .countdown-num.is-popping { animation: count-pop .6s var(--spring); }
   @keyframes count-pop {
@@ -465,69 +1115,9 @@
     100% { transform: scale(1); }
   }
   .countdown-hint {
-    position: fixed; left: 0; right: 0;
-    bottom: max(24px, env(safe-area-inset-bottom));
-    text-align: center; color: var(--bone-dim); font-size: .85rem;
+    margin-bottom: max(12px, env(safe-area-inset-bottom));
+    color: var(--vellum-dim); font-style: italic;
   }
-
-  .sheet {
-    width: min(100%, 28rem);
-    max-height: 100%;
-    overflow-y: auto;
-    padding: 24px 22px;
-    border-radius: 24px;
-    background: linear-gradient(180deg, #3b2d22, #2a2019);
-    border: 1px solid var(--hide-line);
-    box-shadow: 0 24px 60px rgba(0, 0, 0, .6);
-    transform: translateY(30px) scale(.96);
-    transition: transform .4s var(--spring);
-  }
-  .overlay.is-open .sheet { transform: none; }
-
-  #roundOver .sheet { text-align: center; display: grid; gap: 14px; }
-  .times-up {
-    font-family: var(--display);
-    font-size: clamp(3rem, 16vw, 4.4rem);
-    line-height: 1;
-    color: var(--ochre-hi);
-    text-shadow: 0 5px 0 #7a4212;
-    transform: rotate(-3deg);
-  }
-  #roundOver.is-open .times-up { animation: slam .55s var(--spring); }
-  @keyframes slam {
-    0%   { transform: scale(2.6) rotate(-10deg); opacity: 0; }
-    60%  { transform: scale(.94) rotate(-3deg); opacity: 1; }
-    100% { transform: scale(1) rotate(-3deg); }
-  }
-  .final-score { font-family: var(--display); font-size: 4.2rem; line-height: 1; font-variant-numeric: tabular-nums; }
-  .final-label { color: var(--bone-dim); font-size: .85rem; letter-spacing: .12em; text-transform: uppercase; }
-  .round-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 6px; }
-  .round-actions .slab-btn { font-size: 1.2rem; padding: 14px 8px; }
-  .round-actions .slab-btn.secondary { --face: var(--stone); --edge: var(--stone-lo); }
-  .pass-hint { color: var(--bone-dim); font-size: .88rem; }
-  #roundRulesBtn { padding: 10px; }
-
-  .rules h2 {
-    font-family: var(--display); font-weight: 400;
-    font-size: 1.7rem;
-    color: var(--ochre-hi);
-    margin-bottom: 12px;
-  }
-  .rules h3 { font-family: var(--display); font-weight: 400; font-size: 1.15rem; margin: 20px 0 8px; }
-  .rules li { color: var(--bone); line-height: 1.5; font-size: .95rem; }
-  .rules ul { padding-left: 1.2em; display: grid; gap: 6px; }
-  .rules .example { color: var(--bone-dim); font-size: .88rem; margin-top: 2px; }
-  .rules .example b { color: var(--three); }
-  .rules .example s { color: var(--bonk); }
-  .pill {
-    display: inline-block; min-width: 2.2em;
-    padding: 0 6px; border-radius: 8px;
-    font-family: var(--display); text-align: center;
-  }
-  .pill.minus { background: var(--bonk); color: var(--bone); }
-  .pill.one   { background: var(--one); color: var(--ink); }
-  .pill.three { background: var(--three); color: var(--bone); }
-  .rules-close { width: 100%; margin-top: 22px; padding: 14px; font-size: 1.2rem; }
 
   /* ---- toast --------------------------------------------------------------- */
   #toast {
@@ -535,10 +1125,11 @@
     z-index: 20;
     max-width: calc(100vw - 32px);
     padding: 12px 18px;
-    border-radius: 14px;
-    background: var(--bonk);
-    color: var(--bone);
-    font-weight: 600;
+    border-radius: 7px;
+    background: var(--oxblood);
+    border: 1px solid var(--rule-strong);
+    color: var(--parchment);
+    font-weight: 500;
     box-shadow: 0 10px 24px rgba(0, 0, 0, .45);
     visibility: hidden;
     transform: translate(-50%, calc(100% + 40px));
@@ -550,7 +1141,7 @@
     transition: transform .35s var(--spring), visibility 0s;
   }
 
-  .is-invalid { animation: nope .4s ease; border-radius: 14px; box-shadow: 0 0 0 3px var(--bonk); }
+  .is-invalid { animation: nope .4s ease; border-radius: 6px; box-shadow: 0 0 0 3px var(--flash-bad); }
   @keyframes nope {
     0%, 100% { transform: none; }
     25% { transform: translateX(-8px); }
@@ -558,16 +1149,107 @@
     75% { transform: translateX(-4px); }
   }
 
-  /* ---- small screens and reduced motion ------------------------------------ */
+  /* ---- cursors ------------------------------------------------------------- */
+  /* pixel torch cursors. these need no gate at all, since a touch screen never
+     draws a cursor to begin with. the lit one flares over anything
+     clickable. both share the 11,3 hotspot, the tip of the plain flame, so
+     the stick doesn't jump when it flares. each rule is written three times
+     on purpose: a browser that can't parse image-set() drops that line and
+     keeps the one before it, and the @2x copies keep the pixels crisp on
+     high-DPI screens */
+  html {
+    cursor: url("img/torch.png") 11 3, auto;
+    cursor: -webkit-image-set(url("img/torch.png") 1x, url("img/torch@2x.png") 2x) 11 3, auto;
+    cursor: image-set(url("img/torch.png") 1x, url("img/torch@2x.png") 2x) 11 3, auto;
+  }
+  button, a, label, .pack, .rock-logo, .countdown {
+    cursor: url("img/torch-lit.png") 11 3, pointer;
+    cursor: -webkit-image-set(url("img/torch-lit.png") 1x, url("img/torch-lit@2x.png") 2x) 11 3, pointer;
+    cursor: image-set(url("img/torch-lit.png") 1x, url("img/torch-lit@2x.png") 2x) 11 3, pointer;
+  }
+  .slab-btn:disabled {
+    cursor: url("img/torch.png") 11 3, default;
+    cursor: -webkit-image-set(url("img/torch.png") 1x, url("img/torch@2x.png") 2x) 11 3, default;
+    cursor: image-set(url("img/torch.png") 1x, url("img/torch@2x.png") 2x) 11 3, default;
+  }
+  input[type="number"] { cursor: text; }   /* typing a round length still wants the I-beam */
+
+  /* ---- breakpoints and preferences ----------------------------------------- */
   @media (max-width: 380px) {
     .score-btns { gap: 8px; }
-    .score-btn { min-height: 84px; }
-    .score-btn .what { font-size: .7rem; }
+    .score-btn { min-height: 88px; }
+    .score-btn .what { font-size: .85rem; }
     .hud-stats { gap: 14px; }
+    .card-head span:first-child { display: none; }   /* no room for the subject heading beside the number */
   }
   @media (min-height: 760px) {
-    .card-slot { max-height: 420px; }
+    .card-slot { max-height: 440px; }
   }
+  /* the mouse-only light. switched on by script.js adding .has-mouse the first
+     time a real mouse moves, not by a (hover: hover) and (pointer: fine)
+     media query: Firefox on Linux can report no fine pointer at all even with
+     a mouse plugged in, which silently turned the whole torch off there */
+  html.has-mouse .torch-wall {
+    width: 900px; height: 900px;
+    margin: -450px 0 0 -450px;
+    background: radial-gradient(closest-side,
+      rgba(255, 176, 96, 0.13) 0%,
+      rgba(247, 161, 85, 0.096) 19%,
+      rgba(241, 149, 76, 0.07) 34%,
+      rgba(236, 138, 68, 0.05) 47%,
+      rgba(232, 131, 62, 0.036) 56.5%,
+      rgba(228, 124, 57, 0.025) 65%,
+      rgba(225, 118, 52, 0.016) 73%,
+      rgba(222, 112, 48, 0.01) 80.2%,
+      rgba(220, 107, 44, 0.005) 86.1%,
+      rgba(218, 103, 41, 0.003) 91%,
+      rgba(216, 100, 39, 0.001) 95.2%,
+      rgba(215, 97, 37, 0) 98.2%,
+      rgba(214, 96, 36, 0) 100%);
+  }
+  html.has-mouse .torch-surface {
+    display: block;
+    z-index: 5;                          /* over the page, under the dialogs and toast */
+    width: 560px; height: 560px;
+    margin: -280px 0 0 -280px;
+    background: radial-gradient(closest-side,
+      rgba(255, 196, 120, 0.42) 0%,
+      rgba(252, 182, 107, 0.31) 19%,
+      rgba(250, 170, 96, 0.227) 34%,
+      rgba(248, 160, 87, 0.16) 47%,
+      rgba(247, 153, 80, 0.117) 56.5%,
+      rgba(245, 147, 74, 0.081) 65%,
+      rgba(244, 141, 69, 0.053) 73%,
+      rgba(243, 135, 64, 0.032) 80.2%,
+      rgba(242, 131, 60, 0.018) 86.1%,
+      rgba(241, 127, 56, 0.009) 91%,
+      rgba(241, 124, 53, 0.003) 95.2%,
+      rgba(240, 121, 51, 0.001) 98.2%,
+      rgba(240, 120, 50, 0) 100%);
+    mix-blend-mode: soft-light;
+  }
+
+  /* asked for more contrast: drop the see-through panels, the grain and the
+     vignette, and brighten the secondary text */
+  @media (prefers-contrast: more) {
+    :root { --vellum-dim: var(--parchment); --ink-soft: var(--ink); --rule: var(--rule-strong); }
+    body::before, body::after, .shelf::before { display: none; }
+    .panel { background: var(--leather); backdrop-filter: none; }
+  }
+
+  /* Windows high contrast and friends. the palette gets replaced with system
+     colours, and anything that was only a background or a shadow would
+     disappear, so every control gets a real border */
+  @media (forced-colors: active) {
+    .slab-btn, .ghost-btn, .hud-btn, .stepper button, .pack-face, .card, .sheet { border: 2px solid ButtonText; }
+    .pack input:checked + .pack-face { border: 3px solid Highlight; }
+    .pack-face::before { background: Highlight; }
+    .pack-face::after { border-color: HighlightText; }
+    .title { color: CanvasText; background: none; }
+    .fuse-fill { forced-color-adjust: none; background: Highlight; }
+    .torch-layer, body::before, body::after, .shelf::before, .fuse-flame { display: none; }
+  }
+
   /* the torch, the bob and the flinging are all decoration. with reduced
      motion on, everything still changes state, it doesn't fly around */
   @media (prefers-reduced-motion: reduce) {
@@ -576,21 +1258,28 @@
       animation-iteration-count: 1 !important;
       transition-duration: .01ms !important;
     }
-    .torchlight, .rock-logo { animation: none; }
+    .torch-layer, .rock-logo, .tassel, .title, .fuse-flame::before { animation: none; }
   }
 </style>
 </head>
 <body>
-<div class="torchlight" aria-hidden="true"></div>
+<div class="torch-layer torch-wall" aria-hidden="true"></div>
 
 <main id="app">
 
   <!-- menu -->
   <section id="menuScreen" class="screen is-active" aria-labelledby="title">
     <header class="masthead">
-      <img id="rockLogo" class="rock-logo" src="img/rock.png" alt="" width="84" height="44">
-      <h1 id="title">Verses for Cave Men</h1>
-      <p class="tagline">Words with <b>one sound</b> each. Or get bonked.</p>
+      <div class="shelf">
+        <span id="rockLogo" class="rock-logo" aria-hidden="true">
+          <img src="img/rock.png" alt="" width="84" height="44">
+          <span class="mortarboard"><span class="tassel"></span></span>
+        </span>
+      </div>
+      <p class="eyebrow">Est. c. 40,000 BC</p>
+      <h1 id="title" class="title" tabindex="-1">Verses for Cave Men</h1>
+      <p class="motto" lang="la">Brevis esto</p>
+      <p class="tagline">Words with <a href="https://syllables.scrunko.monster">one syllable</a> each. Or get bonked.</p>
     </header>
 
     <div class="panel">
@@ -598,10 +1287,11 @@
         <label class="field-label" for="timeInput">Round length</label>
         <div class="stepper">
           <button type="button" id="timeDown" aria-label="Shorter round">&minus;</button>
-          <input type="number" id="timeInput" inputmode="numeric" min="5" max="600" step="5" value="60">
+          <input type="number" id="timeInput" inputmode="numeric" min="5" max="600" step="1" value="60" required aria-describedby="timeHint">
           <span class="stepper-unit">sec</span>
           <button type="button" id="timeUp" aria-label="Longer round">+</button>
         </div>
+        <p id="timeHint" class="field-hint">Anywhere from 5 to 600 seconds.</p>
       </div>
 
       <fieldset id="packsField">
@@ -624,6 +1314,7 @@
             <span class="pack-face">More Cards box 1<small>red side</small></span>
           </label>
         </div>
+        <p class="field-hint packs-hint">Pick at least one pack to play.</p>
       </fieldset>
 
       <div class="menu-actions">
@@ -641,7 +1332,8 @@
   </section>
 
   <!-- game -->
-  <section id="gameScreen" class="screen" aria-label="Game">
+  <section id="gameScreen" class="screen" aria-labelledby="gameTitle">
+    <h2 id="gameTitle" class="sr-only" tabindex="-1">Round in play</h2>
     <div class="hud">
       <button type="button" id="menuBtn" class="hud-btn">&lsaquo; Menu</button>
       <div class="hud-stats">
@@ -651,47 +1343,63 @@
       <button type="button" id="restartBtn" class="hud-btn">Restart</button>
     </div>
 
-    <div id="fuse" class="fuse" aria-hidden="true"><div id="fuseFill" class="fuse-fill"></div></div>
+    <div id="fuse" class="fuse" aria-hidden="true">
+      <div class="fuse-track"><div class="fuse-fill"></div></div>
+      <div class="fuse-flame"></div>
+    </div>
 
     <div id="cardSlot" class="card-slot">
-      <div id="card" class="card" aria-live="polite">
-        <div class="word-row">
-          <span class="badge badge-one" aria-label="1 point">1</span>
-          <span id="wordOne" class="word">Rock</span>
+      <div id="card" class="card">
+        <div class="card-head" aria-hidden="true">
+          <span>POETRY -- NEANDERTHAL</span>
+          <span id="cardNo"></span>
         </div>
-        <div class="chisel" aria-hidden="true"></div>
-        <div class="word-row">
-          <span class="badge badge-three" aria-label="3 points">3</span>
-          <span id="wordThree" class="word word-three">Rock and roll</span>
+        <div class="card-words" aria-live="polite">
+          <div class="word-row">
+            <span class="badge badge-one" aria-label="1 point">1</span>
+            <span id="wordOne" class="word">Rock</span>
+          </div>
+          <div class="flourish" aria-hidden="true"></div>
+          <div class="word-row">
+            <span class="badge badge-three" aria-label="3 points">3</span>
+            <span id="wordThree" class="word word-three">Rock and roll</span>
+          </div>
         </div>
       </div>
       <div id="bonkPop" class="bonk-pop" aria-hidden="true">BONK!</div>
     </div>
 
     <div class="score-btns">
-      <button type="button" class="slab-btn score-btn minus" data-points="-1">
+      <button type="button" class="slab-btn score-btn minus" data-points="-1" aria-keyshortcuts="- B">
         <span class="pts">&minus;1</span><span class="what">Bonk / skip</span>
+        <kbd class="key" aria-hidden="true">B</kbd>
       </button>
-      <button type="button" class="slab-btn score-btn one" data-points="1">
+      <button type="button" class="slab-btn score-btn one" data-points="1" aria-keyshortcuts="1">
         <span class="pts">+1</span><span class="what">Got the 1</span>
+        <kbd class="key" aria-hidden="true">1</kbd>
       </button>
-      <button type="button" class="slab-btn score-btn three" data-points="3">
+      <button type="button" class="slab-btn score-btn three" data-points="3" aria-keyshortcuts="3">
         <span class="pts">+3</span><span class="what">Got the 3</span>
+        <kbd class="key" aria-hidden="true">3</kbd>
       </button>
     </div>
   </section>
 </main>
 
-<!-- 3, 2, 1 before a round, so the poet has the phone in hand before the clock runs -->
-<div id="countdown" class="overlay" aria-live="assertive">
-  <span id="countdownNum" class="countdown-num">3</span>
-  <p class="countdown-hint">Tap to skip</p>
-</div>
+<div class="torch-layer torch-surface" aria-hidden="true"></div>
 
-<div id="roundOver" class="overlay" role="dialog" aria-modal="true" aria-labelledby="timesUpTitle">
-  <div class="sheet">
-    <div id="timesUpTitle" class="times-up">Time!</div>
-    <div>
+<!-- 3, 2, 1 before a round, so the poet has the phone in hand before the clock runs -->
+<dialog id="countdown" class="countdown" aria-label="Get ready">
+  <span id="countdownNum" class="countdown-num" aria-live="assertive">3</span>
+  <button type="button" id="skipCountdownBtn" class="ghost-btn">Skip</button>
+  <p class="countdown-hint">or tap anywhere</p>
+</dialog>
+
+<dialog id="roundOver" class="sheet" aria-labelledby="timesUpTitle" aria-describedby="roundSummary">
+  <div class="sheet-body">
+    <h2 id="timesUpTitle" class="times-up">Time!</h2>
+    <p class="tempus" lang="la">Tempus fugit</p>
+    <div id="roundSummary">
       <div id="finalScore" class="final-score">0</div>
       <div class="final-label">Round score</div>
     </div>
@@ -702,11 +1410,14 @@
     </div>
     <button type="button" id="roundRulesBtn" class="ghost-btn">How to play</button>
   </div>
-</div>
+</dialog>
 
-<div id="rules" class="overlay" role="dialog" aria-modal="true" aria-labelledby="rulesTitle">
-  <div class="sheet rules">
+<dialog id="rules" class="sheet rules" aria-labelledby="rulesTitle">
+  <div class="sheet-body">
     <h2 id="rulesTitle">How to play</h2>
+    <p class="lede">A party game for two teams, one No! Stick, and anyone who has ever
+      said "utilise" when "use" would do. The Poet gets their team to guess a word
+      while speaking only in words of a single syllable.</p>
 
     <h3>The game</h3>
     <ul>
@@ -717,6 +1428,8 @@
         <p class="example">"Big cat. Has mane. Goes <b>roar</b>." works. <s>"Enormous feline"</s> does not.</p></li>
       <li>Slip up with a longer word and the other team gets to bonk you with the
         No! Stick, and the card costs your team <span class="pill minus">&minus;1</span>.</li>
+      <li>Skipping a card also costs <span class="pill minus">&minus;1</span>. Running out of
+        time on a card doesn't cost anything.</li>
       <li>Most points after an agreed number of rounds wins.</li>
     </ul>
 
@@ -727,18 +1440,26 @@
         know the words and can catch slips.</li>
       <li>After each card, tap <span class="pill one">+1</span> or
         <span class="pill three">+3</span> for what the team guessed, or
-        <span class="pill minus">&minus;1</span> for a bonk or a skip. The next card shows up on its own.</li>
-      <li>When the torch burns out, hand it to the next team and tap <b>Next team</b>.
+        <span class="pill minus">&minus;1</span> for a bonk or a skip. The next card shows up on its own.
+        When time runs out mid-card, just pass it on, there's no penalty.</li>
+      <li>On a keyboard, <kbd>1</kbd> and <kbd>3</kbd> score, and <kbd>B</kbd> or
+        <kbd>-</kbd> is a bonk.</li>
+      <li>When the fuse burns out, hand it to the next team and tap <b>Next team</b>.
         The deck carries on, so nobody sees a repeat until every card's been used.</li>
       <li>On a phone, the screen stays awake during a round.</li>
     </ul>
 
     <button type="button" id="rulesCloseBtn" class="slab-btn rules-close">Got it</button>
   </div>
-</div>
+</dialog>
 
+<p id="announcer" class="sr-only" role="status"></p>
 <div id="toast" role="alert"></div>
 
-<script type="module" src="js/script.js"></script>
+<!-- the ?v= is the first 10 characters of sha256sum js/script.js. the server
+     sends no Cache-Control, so browsers guess how long to keep script.js and
+     can run a stale copy for hours after it changes. a new ?v= is a new URL,
+     so they have to fetch it. change this whenever script.js changes -->
+<script type="module" src="js/script.js?v=8262974737"></script>
 </body>
 </html>
