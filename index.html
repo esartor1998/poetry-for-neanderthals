@@ -114,9 +114,12 @@
     background:
       radial-gradient(ellipse 90% 60% at 50% -10%, var(--walnut-hi) 0%, transparent 70%),
       /* wainscot seams, far enough apart that they read as panelling and
-         not as stripes */
-      repeating-linear-gradient(90deg, transparent 0 139px,
-        color-mix(in srgb, var(--walnut-deep) 55%, transparent) 139px 141px),
+         not as stripes. a single gradient tiled by background-size, not
+         repeating-linear-gradient: Firefox 140 paints a repeating one with
+         transparent and color-mix() stops inside out, seams everywhere and
+         wood only in the 2px gaps */
+      linear-gradient(90deg, transparent 139px,
+        color-mix(in srgb, var(--walnut-deep) 55%, transparent) 139px) 0 0 / 141px 100%,
       linear-gradient(180deg, var(--walnut) 0%, var(--walnut-deep) 100%);
     background-color: var(--walnut-deep);
     background-attachment: fixed;
@@ -783,7 +786,6 @@
     rotate: -.6deg;
     background:
       linear-gradient(180deg, transparent 43px, color-mix(in srgb, var(--rubric) 70%, transparent) 43px 45px, transparent 45px),
-      repeating-linear-gradient(180deg, transparent 0 31px, color-mix(in srgb, var(--ledger-blue) 22%, transparent) 31px 32px) 0 45px / 100% 100% no-repeat,
       radial-gradient(120% 80% at 20% 10%, color-mix(in srgb, #fff 45%, transparent), transparent 60%),
       var(--card-stock);
     mask: radial-gradient(circle 9px at 50% calc(100% - var(--hole-y)), transparent 8px, #000 9px);
@@ -801,10 +803,19 @@
     color: var(--ink-soft);
     white-space: nowrap;
   }
+  #cardNo { margin-left: auto; }         /* stays right when the subject heading is hidden on narrow phones */
+  /* the ledger lines live here and not on .card so they start under the
+     red header rule for free. the negative margins stretch this box to the
+     card's edges and the matching padding puts the words back, so the lines
+     run edge to edge and the words stay centred. tiled rather than a
+     repeating gradient for the same Firefox reason as the wainscot */
   .card-words {
     flex: 1;
     display: flex; flex-direction: column; justify-content: center;
-    padding-top: 10px;
+    margin: 0 -20px -48px;
+    padding: 10px 20px 48px;
+    background: linear-gradient(180deg, transparent 31px,
+      color-mix(in srgb, var(--ledger-blue) 28%, transparent) 31px) 0 1px / 100% 32px;
   }
 
   .word-row { position: relative; display: flex; align-items: center; gap: 14px; }
@@ -976,6 +987,7 @@
     min-height: 0;
     overflow-y: auto;
     overscroll-behavior: contain;
+    scrollbar-color: var(--parchment-burn) transparent;   /* the dark-scheme default is a pale bar that glares on parchment */
     padding: 26px 24px;
   }
 
@@ -1415,8 +1427,7 @@
 <dialog id="rules" class="sheet rules" aria-labelledby="rulesTitle">
   <div class="sheet-body">
     <h2 id="rulesTitle">How to play</h2>
-    <p class="lede">A party game for two teams, one No! Stick, and anyone who has ever
-      said "utilise" when "use" would do. The Poet gets their team to guess a word
+    <p class="lede">A party game for two teams and a bonk-stick. The Poet gets their team to guess a word
       while speaking only in words of a single syllable.</p>
 
     <h3>The game</h3>
@@ -1426,8 +1437,7 @@
         <span class="pill three">3</span> word or phrase. The Poet gets their team to guess it.</li>
       <li>The catch: the Poet may only say words with <b>one syllable</b>.
         <p class="example">"Big cat. Has mane. Goes <b>roar</b>." works. <s>"Enormous feline"</s> does not.</p></li>
-      <li>Slip up with a longer word and the other team gets to bonk you with the
-        No! Stick, and the card costs your team <span class="pill minus">&minus;1</span>.</li>
+      <li>Slip up with a longer word and the other team gets to (nicely) hit you, and the card costs your team <span class="pill minus">&minus;1</span>.</li>
       <li>Skipping a card also costs <span class="pill minus">&minus;1</span>. Running out of
         time on a card doesn't cost anything.</li>
       <li>Most points after an agreed number of rounds wins.</li>
@@ -1460,6 +1470,6 @@
      sends no Cache-Control, so browsers guess how long to keep script.js and
      can run a stale copy for hours after it changes. a new ?v= is a new URL,
      so they have to fetch it. change this whenever script.js changes -->
-<script type="module" src="js/script.js?v=8262974737"></script>
+<script type="module" src="js/script.js?v=0bcbd08ac5"></script>
 </body>
 </html>

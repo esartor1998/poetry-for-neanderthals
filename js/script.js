@@ -434,7 +434,7 @@ document.addEventListener('visibilitychange', () => {
 // with a mouse, the light comes from the torch cursor. it eases after the
 // pointer instead of sticking to it, so it feels carried rather than pinned
 // on. touch screens have no cursor between taps, so the glow stays put.
-// "is there a mouse" is decided by a mouse actually moving, not by asking
+// "is there a mouse" is decided by a real mouse moving, not by asking
 // matchMedia('(pointer: fine)'): Firefox on Linux can answer no with a mouse
 // plugged in, which left the torch dead there
 function followTorch() {
