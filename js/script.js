@@ -12,7 +12,8 @@ const TAP_COOLDOWN_MS = 250;      // swallows an accidental double tap that woul
 const BONK_VIBRATE_MS = 90;       // android only, iOS ignores navigator.vibrate
 const TIME_UP_VIBRATE = [70, 50, 70, 50, 160];
 const TOAST_MS = 4500;
-const OPTIONS_KEY = 'vfcm.options';
+const OPTIONS_KEY = 'caveman-poetry.options';
+const OLD_OPTIONS_KEY = 'vfcm.options';   // from when the site was Verses for Cave Men
 const LIGHT_EASE = 0.16;          // share of the gap to the cursor the glow closes per 60 Hz frame
 const LIGHT_OFFSET_X = 3;         // px from the torch cursor's hotspot to the middle of its flame
 const LIGHT_OFFSET_Y = 7;
@@ -99,7 +100,11 @@ function saveOptions(seconds, paths) {
 
 function restoreOptions() {
   let saved = null;
-  try { saved = JSON.parse(localStorage.getItem(OPTIONS_KEY)); } catch { /* defaults it is */ }
+  // falls back to the old key so a returning visitor keeps their options
+  // through the rename. the next save writes them under the new key
+  try {
+    saved = JSON.parse(localStorage.getItem(OPTIONS_KEY) ?? localStorage.getItem(OLD_OPTIONS_KEY));
+  } catch { /* defaults it is */ }
   if (!saved) return;
   if (Number.isInteger(saved.seconds)) el('timeInput').value = String(saved.seconds);
   if (Array.isArray(saved.paths) && saved.paths.length) {
